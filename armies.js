@@ -197,31 +197,33 @@ function render() {
 
 function buildUnitsTable(armyId, units) {
   return `
-    <table>
-      <thead>
-        <tr>
-          <th>Faction</th><th>Unit</th>
-          <th>Owned</th><th>In Army</th><th>Type</th><th>Status</th><th></th>
-        </tr>
-      </thead>
-      <tbody>
-        ${units.map(({ assignment, entry, maxQuantity }) => `
+    <div class="table-wrap">
+      <table>
+        <thead>
           <tr>
-            <td>${escapeHtml(entry.faction)}</td>
-            <td>${escapeHtml(entry.unit)}</td>
-            <td>${entry.number}</td>
-            <td>${buildQuantityControl(armyId, entry.id, assignment.quantity, maxQuantity)}</td>
-            <td>${escapeHtml(entry.type)}</td>
-            <td><span class="badge s-${escapeHtml(entry.status)}">${escapeHtml(entry.status)}</span></td>
-            <td>
-              <div class="row-actions">
-                <button class="delete" data-action="remove-unit" data-army-id="${armyId}" data-unit-id="${entry.id}">Remove</button>
-              </div>
-            </td>
+            <th>Faction</th><th>Unit</th>
+            <th>Owned</th><th>In Army</th><th>Type</th><th>Status</th><th></th>
           </tr>
-        `).join("")}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          ${units.map(({ assignment, entry, maxQuantity }) => `
+            <tr>
+              <td>${escapeHtml(entry.faction)}</td>
+              <td>${escapeHtml(entry.unit)}</td>
+              <td>${entry.number}</td>
+              <td>${buildQuantityControl(armyId, entry.id, assignment.quantity, maxQuantity)}</td>
+              <td>${escapeHtml(entry.type)}</td>
+              <td><span class="badge s-${escapeHtml(entry.status)}">${escapeHtml(entry.status)}</span></td>
+              <td>
+                <div class="row-actions">
+                  <button class="delete" data-action="remove-unit" data-army-id="${armyId}" data-unit-id="${entry.id}">Remove</button>
+                </div>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
   `;
 }
 
