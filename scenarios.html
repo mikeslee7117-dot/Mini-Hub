@@ -14,20 +14,20 @@
         <span class="site-brand-subtitle">Mini tracking workspace</span>
       </a>
 
-      <div class="sidebar-menu">
-        <button class="menu-toggle" type="button" data-menu-toggle aria-controls="primary-nav" aria-expanded="false">Menu</button>
-        <nav id="primary-nav" class="site-nav" aria-label="Primary navigation" hidden>
+      <details class="sidebar-menu">
+        <summary class="menu-toggle">Menu</summary>
+        <nav class="site-nav" aria-label="Primary navigation">
           <a href="index.html" class="nav-link">Dashboard</a>
           <a href="tracker.html" class="nav-link">Tracker</a>
           <a href="armies.html" class="nav-link">Armies</a>
           <a href="scenarios.html" class="nav-link nav-link--active">Scenarios</a>
           <a href="painting.html" class="nav-link">Painting</a>
         </nav>
-      </div>
+      </details>
     </aside>
 
     <main class="app">
-      <section class="page-banner scenarios-banner" aria-label="Scenarios banner">
+      <section class="page-banner scenarios-banner dashboard-hero" aria-label="Scenarios banner">
         <div class="page-banner-content">
           <h1>Scenarios</h1>
           <p>Match your owned minis against scenario requirements.</p>
@@ -47,7 +47,7 @@
               <option value="">Select a game</option>
             </select>
           </label>
-          <button type="submit">Create</button>
+          <button type="submit">Create Scenario</button>
         </form>
         <p class="small-note">Add requirements to each scenario, then assign owned minis to see whether you can cover the unit needs.</p>
       </section>
@@ -59,7 +59,6 @@
     </main>
   </div>
 
-  <script src="menu.js"></script>
   <script src="cloud-sync.js"></script>
   <script src="ui.js"></script>
   <script src="scenarios.js"></script>

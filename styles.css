@@ -152,12 +152,6 @@ body {
   max-width: 680px;
 }
 
-.armies-banner,
-.scenarios-banner,
-.painting-banner {
-  background: var(--panel);
-}
-
 .header h1 {
   margin: 0;
   letter-spacing: 0.02em;
@@ -182,22 +176,50 @@ body {
 }
 
 .sidebar-menu {
+  display: block;
+}
+
+.sidebar-menu[open] {
   display: grid;
   gap: 0.6rem;
 }
 
 .menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
+  padding: 0.65rem 0.85rem;
   min-height: 42px;
   background: rgba(34, 32, 29, 0.13);
   color: var(--ink);
   border: 1px solid var(--line);
   border-radius: 10px;
   font-weight: 700;
+  cursor: pointer;
+  list-style: none;
 }
 
 .menu-toggle:hover {
   background: rgba(34, 32, 29, 0.2);
+}
+
+.menu-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.menu-toggle::after {
+  content: "+";
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.sidebar-menu[open] .menu-toggle::after {
+  content: "-";
+}
+
+.sidebar-menu .site-nav {
+  margin-top: 0.6rem;
 }
 
 .nav-link {
@@ -653,6 +675,7 @@ td:last-child {
   display: flex;
   gap: 0.3rem;
   flex-wrap: nowrap;
+  align-items: center;
 }
 
 .icon-btn {
@@ -1067,14 +1090,14 @@ td:last-child {
   }
 
   .row-actions {
-    flex-wrap: wrap;
-    gap: 0.45rem;
+    flex-wrap: nowrap;
+    gap: 0.35rem;
   }
 
   .row-actions button {
     font-size: 0.84rem;
-    padding: 0.45rem 0.66rem;
-    min-height: 40px;
+    padding: 0.35rem 0.5rem;
+    min-height: 36px;
   }
 
   .icon-btn {
