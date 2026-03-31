@@ -135,8 +135,8 @@ function renderPaintsTable() {
         <td><input class="inline-input" id="edit-paint-brand-${paint.id}" value="${escapeHtml(paint.brand)}" /></td>
         <td>
           <div class="row-actions">
-            <button class="save" data-action="save-paint" data-paint-id="${paint.id}">Save</button>
-            <button class="cancel" data-action="cancel-edit-paint" data-paint-id="${paint.id}">Cancel</button>
+            <button class="icon-btn save" data-action="save-paint" data-paint-id="${paint.id}" title="Save" aria-label="Save">&#10003;</button>
+            <button class="icon-btn cancel" data-action="cancel-edit-paint" data-paint-id="${paint.id}" title="Cancel" aria-label="Cancel">&times;</button>
           </div>
         </td>
       `;
@@ -147,8 +147,8 @@ function renderPaintsTable() {
         <td>${escapeHtml(paint.brand)}</td>
         <td>
           <div class="row-actions">
-            <button data-action="edit-paint" data-paint-id="${paint.id}">Edit</button>
-            <button class="delete" data-action="delete-paint" data-paint-id="${paint.id}">Delete</button>
+            <button class="icon-btn" data-action="edit-paint" data-paint-id="${paint.id}" title="Edit" aria-label="Edit">&#9998;</button>
+            <button class="icon-btn delete" data-action="delete-paint" data-paint-id="${paint.id}" title="Delete" aria-label="Delete">&times;</button>
           </div>
         </td>
       `;
@@ -225,8 +225,8 @@ function buildPlanRow(plan) {
       <td>${buildAssignmentSummary(plan)}</td>
       <td>
         <div class="row-actions">
-          <button data-action="toggle-edit-plan" data-plan-id="${plan.id}">${canEdit ? "Done" : "Edit"}</button>
-          <button class="delete" data-action="delete-plan" data-plan-id="${plan.id}">Remove Unit</button>
+          <button class="icon-btn ${canEdit ? "save" : ""}" data-action="toggle-edit-plan" data-plan-id="${plan.id}" title="${canEdit ? "Done" : "Edit"}" aria-label="${canEdit ? "Done" : "Edit"}">${canEdit ? "&#10003;" : "&#9998;"}</button>
+          <button class="icon-btn delete" data-action="delete-plan" data-plan-id="${plan.id}" title="Remove Unit" aria-label="Remove Unit">&times;</button>
         </div>
       </td>
     </tr>
@@ -296,7 +296,7 @@ function buildAssignmentAddRow(plan) {
         Area(s)
         <input id="areas-input-${plan.id}" class="inline-input" placeholder="e.g. Head, Legs, Armor" />
       </label>
-      <button data-action="add-assignment" data-plan-id="${plan.id}">Add Paint</button>
+      <button data-action="add-assignment" data-plan-id="${plan.id}" title="Add Paint">+</button>
     </div>
   `;
 }
@@ -341,7 +341,7 @@ function buildAssignmentRow(planId, assignment) {
       <td>${escapeHtml(assignment.areas)}</td>
       <td>
         <div class="row-actions">
-          <button class="delete" data-action="delete-assignment" data-plan-id="${planId}" data-assignment-id="${assignment.id}">Remove</button>
+          <button class="icon-btn delete" data-action="delete-assignment" data-plan-id="${planId}" data-assignment-id="${assignment.id}" title="Remove" aria-label="Remove">&times;</button>
         </div>
       </td>
     </tr>

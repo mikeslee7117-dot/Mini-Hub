@@ -162,16 +162,16 @@ function render() {
         `;
     const actionButtons = isEditing
       ? `
-          <button class="save" data-action="save-army" data-army-id="${army.id}">Save</button>
-          <button class="cancel" data-action="cancel-edit-army" data-army-id="${army.id}">Cancel</button>
-          <button class="delete" data-action="delete-army" data-army-id="${army.id}">Delete Army</button>
+          <button class="icon-btn save" data-action="save-army" data-army-id="${army.id}" title="Save" aria-label="Save">&#10003;</button>
+          <button class="icon-btn cancel" data-action="cancel-edit-army" data-army-id="${army.id}" title="Cancel" aria-label="Cancel">&times;</button>
+          <button class="icon-btn delete" data-action="delete-army" data-army-id="${army.id}" title="Delete Army" aria-label="Delete Army">&times;</button>
         `
       : `
-          <button data-action="edit-army" data-army-id="${army.id}">Edit</button>
-          <button data-action="toggle-picker" data-army-id="${army.id}">
-            ${pickerOpen ? "Close Picker" : "Add Units"}
+          <button class="icon-btn" data-action="edit-army" data-army-id="${army.id}" title="Edit" aria-label="Edit">&#9998;</button>
+          <button class="icon-btn" data-action="toggle-picker" data-army-id="${army.id}" title="${pickerOpen ? "Close Picker" : "Add Units"}" aria-label="${pickerOpen ? "Close Picker" : "Add Units"}">
+            ${pickerOpen ? "&times;" : "+"}
           </button>
-          <button class="delete" data-action="delete-army" data-army-id="${army.id}">Delete Army</button>
+          <button class="icon-btn delete" data-action="delete-army" data-army-id="${army.id}" title="Delete Army" aria-label="Delete Army">&times;</button>
         `;
 
     card.innerHTML = `
@@ -216,7 +216,7 @@ function buildUnitsTable(armyId, units) {
               <td><span class="badge s-${escapeHtml(entry.status)}">${escapeHtml(entry.status)}</span></td>
               <td>
                 <div class="row-actions">
-                  <button class="delete" data-action="remove-unit" data-army-id="${armyId}" data-unit-id="${entry.id}">Remove</button>
+                  <button class="icon-btn delete" data-action="remove-unit" data-army-id="${armyId}" data-unit-id="${entry.id}" title="Remove" aria-label="Remove">&times;</button>
                 </div>
               </td>
             </tr>
@@ -263,7 +263,7 @@ function buildPicker(armyId, available) {
         <select id="army-picker-select-${armyId}" class="assignment-select">
           ${options}
         </select>
-        <button data-action="assign-selected" data-army-id="${armyId}">Assign</button>
+        <button data-action="assign-selected" data-army-id="${armyId}" title="Add Unit">+</button>
       </div>
     </div>
   `;

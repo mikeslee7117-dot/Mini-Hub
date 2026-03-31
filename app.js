@@ -73,9 +73,7 @@ entriesBody.addEventListener("click", (event) => {
     return;
   }
 
-  if (target.dataset.action === "next") {
-    advanceStatus(id);
-  } else if (target.dataset.action === "delete") {
+  if (target.dataset.action === "delete") {
     removeEntry(id);
   } else if (target.dataset.action === "copy") {
     copyToForm(id);
@@ -208,7 +206,6 @@ function render() {
       continue;
     }
 
-    const nextDisabled = entry.status === "Completed" ? "disabled" : "";
     row.innerHTML = `
       <td>${escapeHtml(entry.game)}</td>
       <td>${escapeHtml(entry.faction)}</td>
@@ -219,10 +216,9 @@ function render() {
       <td class="armies-cell">${getUnitCollectionsHtml(entry.id)}</td>
       <td>
         <div class="row-actions">
-          <button data-action="edit" data-id="${entry.id}">Edit</button>
-          <button data-action="copy" data-id="${entry.id}">Copy</button>
-          <button data-action="next" data-id="${entry.id}" ${nextDisabled}>Advance</button>
-          <button class="delete" data-action="delete" data-id="${entry.id}">Delete</button>
+          <button class="icon-btn" data-action="edit" data-id="${entry.id}" title="Edit" aria-label="Edit">&#9998;</button>
+          <button class="icon-btn" data-action="copy" data-id="${entry.id}" title="Copy" aria-label="Copy">&#128203;</button>
+          <button class="icon-btn delete" data-action="delete" data-id="${entry.id}" title="Delete" aria-label="Delete">&times;</button>
         </div>
       </td>
     `;
@@ -254,21 +250,6 @@ function renderSortHeaders() {
     if (indicator instanceof HTMLElement) {
       indicator.textContent = active ? (filters.sortDir === "asc" ? "↑" : "↓") : "";
     }
-  }
-}
-
-function advanceStatus(id) {
-  editingId = null;
-  const item = entries.find((entry) => entry.id === id);
-  if (!item) {
-    return;
-  }
-
-  const index = STATUS_VALUES.indexOf(item.status);
-  if (index >= 0 && index < STATUS_VALUES.length - 1) {
-    item.status = STATUS_VALUES[index + 1];
-    persistEntries();
-    render();
   }
 }
 
@@ -422,8 +403,8 @@ function buildEditRow(entry) {
     <td class="armies-cell">${getUnitCollectionsHtml(entry.id)}</td>
     <td>
       <div class="row-actions">
-        <button class="save" data-action="save" data-id="${entry.id}">Save</button>
-        <button class="cancel" data-action="cancel" data-id="${entry.id}">Cancel</button>
+        <button class="icon-btn save" data-action="save" data-id="${entry.id}" title="Save" aria-label="Save">&#10003;</button>
+        <button class="icon-btn cancel" data-action="cancel" data-id="${entry.id}" title="Cancel" aria-label="Cancel">&times;</button>
       </div>
     </td>
   `;

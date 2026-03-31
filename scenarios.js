@@ -166,13 +166,13 @@ function render() {
         `;
     const headerActions = isEditingScenario
       ? `
-          <button class="save" data-action="save-scenario" data-scenario-id="${scenario.id}">Save</button>
-          <button class="cancel" data-action="cancel-edit-scenario" data-scenario-id="${scenario.id}">Cancel</button>
-          <button class="delete" data-action="delete-scenario" data-scenario-id="${scenario.id}">Delete Scenario</button>
+          <button class="icon-btn save" data-action="save-scenario" data-scenario-id="${scenario.id}" title="Save" aria-label="Save">&#10003;</button>
+          <button class="icon-btn cancel" data-action="cancel-edit-scenario" data-scenario-id="${scenario.id}" title="Cancel" aria-label="Cancel">&times;</button>
+          <button class="icon-btn delete" data-action="delete-scenario" data-scenario-id="${scenario.id}" title="Delete Scenario" aria-label="Delete Scenario">&times;</button>
         `
       : `
-          <button data-action="edit-scenario" data-scenario-id="${scenario.id}">Edit</button>
-          <button class="delete" data-action="delete-scenario" data-scenario-id="${scenario.id}">Delete Scenario</button>
+          <button class="icon-btn" data-action="edit-scenario" data-scenario-id="${scenario.id}" title="Edit" aria-label="Edit">&#9998;</button>
+          <button class="icon-btn delete" data-action="delete-scenario" data-scenario-id="${scenario.id}" title="Delete Scenario" aria-label="Delete Scenario">&times;</button>
         `;
 
     card.innerHTML = `
@@ -201,7 +201,7 @@ function render() {
               Needed
               <input name="requiredCount" type="number" min="1" value="1" required />
             </label>
-            <button type="submit">Add Requirement</button>
+            <button type="submit" title="Add Requirement">+</button>
           </form>
         ` : ""}
         ${buildRequirementsTable(scenario)}
@@ -261,9 +261,9 @@ function buildRequirementRow(scenario, requirement) {
       <td class="assignment-list">${buildAssignmentList(scenario, requirement)}</td>
       <td>
         <div class="row-actions">
-          <button data-action="edit-requirement" data-requirement-id="${requirement.id}">Edit</button>
+          <button class="icon-btn" data-action="edit-requirement" data-requirement-id="${requirement.id}" title="Edit" aria-label="Edit">&#9998;</button>
           <button data-action="toggle-picker" data-requirement-id="${requirement.id}">${open ? "Close" : "Assign"}</button>
-          <button class="delete" data-action="delete-requirement" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}">Delete</button>
+          <button class="icon-btn delete" data-action="delete-requirement" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}" title="Delete" aria-label="Delete">&times;</button>
         </div>
       </td>
     </tr>
@@ -291,8 +291,8 @@ function buildRequirementEditRow(scenario, requirement) {
       <td class="assignment-list">${buildAssignmentList(scenario, requirement)}</td>
       <td>
         <div class="row-actions">
-          <button class="save" data-action="save-requirement" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}">Save</button>
-          <button class="cancel" data-action="cancel-edit" data-requirement-id="${requirement.id}">Cancel</button>
+          <button class="icon-btn save" data-action="save-requirement" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}" title="Save" aria-label="Save">&#10003;</button>
+          <button class="icon-btn cancel" data-action="cancel-edit" data-requirement-id="${requirement.id}" title="Cancel" aria-label="Cancel">&times;</button>
         </div>
       </td>
     </tr>
@@ -319,7 +319,7 @@ function buildAssignmentList(scenario, requirement) {
       <div class="assignment-row">
         <span class="assignment-unit">${escapeHtml(entry.unit)}</span>
         <select class="assignment-select" data-action="set-assignment-quantity" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}" data-unit-id="${entry.id}">${options}</select>
-        <button class="delete" data-action="remove-assignment" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}" data-unit-id="${entry.id}">Remove</button>
+        <button class="icon-btn delete" data-action="remove-assignment" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}" data-unit-id="${entry.id}" title="Remove" aria-label="Remove">&times;</button>
       </div>
     `;
   }).join("");
@@ -374,7 +374,7 @@ function buildRequirementPicker(scenario, requirement) {
         <select id="picker-select-${requirement.id}" class="assignment-select">
           ${options}
         </select>
-        <button data-action="assign-selected" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}">Assign</button>
+        <button data-action="assign-selected" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}" title="Add Assignment">+</button>
       </div>
     </div>
   `;
