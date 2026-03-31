@@ -4,14 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Scenarios — Mini Tracker</title>
-  <link rel="stylesheet" href="styles.css?v=20260330" />
+  <link rel="stylesheet" href="styles.css?v=20260331" />
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
       <a href="index.html" class="site-brand" aria-label="Mini Hub dashboard">
         <span class="site-brand-title">Mini Hub</span>
-        <span class="site-brand-subtitle">Mini tracking workspace</span>
       </a>
 
       <details class="sidebar-menu">
@@ -35,29 +34,102 @@
       </section>
 
       <section class="panel">
-        <h2>Create Scenario</h2>
-        <form id="create-scenario-form" class="create-form scenario-create-form">
-          <label>
-            Scenario Name
-            <input id="scenario-name" name="scenarioName" required placeholder="e.g. Hold the Bridge" />
-          </label>
-          <label class="scenario-game-field">
-            Game
-            <select id="scenario-game" name="scenarioGame" required>
-              <option value="">Select a game</option>
-            </select>
-          </label>
-          <button type="submit">Create Scenario</button>
-        </form>
-        <p class="small-note">Add requirements to each scenario, then assign owned minis to see whether you can cover the unit needs.</p>
-      </section>
-
-      <section>
-        <h2 class="scenarios-heading">Scenario Lists</h2>
+        <div class="section-toolbar">
+          <h2>Scenario Lists</h2>
+          <button id="open-create-scenario-btn" type="button">Add Scenario</button>
+        </div>
         <div id="scenarios-list"></div>
       </section>
     </main>
   </div>
+
+  <!-- Create Scenario Dialog -->
+  <dialog id="create-scenario-dialog">
+    <div class="dialog-header">
+      <h2>Create Scenario</h2>
+      <button class="dialog-close-btn" type="button" data-close-dialog="create-scenario-dialog" aria-label="Close">&times;</button>
+    </div>
+    <form id="create-scenario-form" class="dialog-form">
+      <label>Scenario Name<input id="scenario-name" name="scenarioName" required placeholder="e.g. Hold the Bridge" /></label>
+      <label>Game
+        <select id="scenario-game" name="scenarioGame" required>
+          <option value="">Select a game</option>
+        </select>
+      </label>
+      <div class="dialog-footer">
+        <button type="button" data-close-dialog="create-scenario-dialog" class="btn-secondary">Cancel</button>
+        <button type="submit">Create Scenario</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Add Requirement Dialog -->
+  <dialog id="add-requirement-dialog">
+    <div class="dialog-header">
+      <h2>Add Requirement</h2>
+      <button class="dialog-close-btn" type="button" data-close-dialog="add-requirement-dialog" aria-label="Close">&times;</button>
+    </div>
+    <form id="add-requirement-form" class="dialog-form">
+      <label>Faction<input id="req-faction" name="faction" required /></label>
+      <label>Unit<input id="req-unit" name="unit" required /></label>
+      <label>Type<input id="req-type" name="type" required /></label>
+      <label>Needed<input id="req-count" name="requiredCount" type="number" min="1" value="1" required /></label>
+      <div class="dialog-footer">
+        <button type="button" data-close-dialog="add-requirement-dialog" class="btn-secondary">Cancel</button>
+        <button type="submit">Add</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Assign Mini to Requirement Dialog -->
+  <dialog id="requirement-picker-dialog">
+    <div class="dialog-header">
+      <h2>Assign Mini</h2>
+      <button class="dialog-close-btn" type="button" data-close-dialog="requirement-picker-dialog" aria-label="Close">&times;</button>
+    </div>
+    <div class="dialog-body">
+      <label>Select Unit
+        <select id="requirement-picker-select" class="assignment-select"></select>
+      </label>
+    </div>
+    <div class="dialog-footer-wrap">
+      <button type="button" data-close-dialog="requirement-picker-dialog" class="btn-secondary">Done</button>
+      <button type="button" id="requirement-picker-add-btn">Add</button>
+    </div>
+  </dialog>
+
+  <!-- Edit Scenario Dialog -->
+  <dialog id="edit-scenario-dialog">
+    <div class="dialog-header">
+      <h2>Edit Scenario</h2>
+      <button class="dialog-close-btn" type="button" data-close-dialog="edit-scenario-dialog" aria-label="Close">&times;</button>
+    </div>
+    <div class="dialog-body">
+      <label>Scenario Name<input id="edit-scenario-dialog-name" required /></label>
+    </div>
+    <div class="dialog-footer-wrap">
+      <button type="button" data-close-dialog="edit-scenario-dialog" class="btn-secondary">Cancel</button>
+      <button type="button" id="edit-scenario-dialog-save-btn">Save</button>
+    </div>
+  </dialog>
+
+  <!-- Edit Requirement Dialog -->
+  <dialog id="edit-requirement-dialog">
+    <div class="dialog-header">
+      <h2>Edit Requirement</h2>
+      <button class="dialog-close-btn" type="button" data-close-dialog="edit-requirement-dialog" aria-label="Close">&times;</button>
+    </div>
+    <form id="edit-requirement-form" class="dialog-form">
+      <label>Faction<input id="edit-req-faction" name="faction" required /></label>
+      <label>Unit<input id="edit-req-unit" name="unit" required /></label>
+      <label>Type<input id="edit-req-type" name="type" required /></label>
+      <label>Needed<input id="edit-req-count" name="requiredCount" type="number" min="1" required /></label>
+      <div class="dialog-footer">
+        <button type="button" data-close-dialog="edit-requirement-dialog" class="btn-secondary">Cancel</button>
+        <button type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
 
   <script src="cloud-sync.js"></script>
   <script src="ui.js"></script>

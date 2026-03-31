@@ -42,6 +42,7 @@ function initUiHelpers() {
   applyCompactDensity();
   ensureToastRoot();
   bindGlobalToasts();
+  wireGlobalDialogCloses();
 
   window.appToast = showToast;
 }
@@ -137,4 +138,30 @@ function showToast(message) {
       toast.remove();
     }, 180);
   }, TOAST_DURATION_MS);
+}
+
+function wireGlobalDialogCloses() {
+  document.addEventListener("click", (event) => {
+    const closeBtn = event.target.closest("[data-close-dialog]");
+    if (closeBtn instanceof HTMLElement) {
+      const targetId = closeBtn.dataset.closeDialog;
+      if (targetId) {
+        const dialog = document.getElementById(targetId);
+        if (dialog instanceof HTMLDialogElement) {
+          dialog.close();
+        }
+      }
+    }
+  });
+  
+  // Close dialog when clicking backdrop
+  document.addEventListener("click", (event) => {
+    if (event.target instanceof HTMLDialogElement) {
+      const rect = event.target.getBoundingClientRect();
+      if (event.clientX < rect.left || event.clientX >= rect.right ||
+          event.clientY < rect.top || event.clientY >= rect.bottom) {
+        event.target.close();
+      }
+    }
+  });
 }

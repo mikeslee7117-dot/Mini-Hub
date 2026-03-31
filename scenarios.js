@@ -8,16 +8,121 @@ const STATUS_VALUES = ["Unpainted", "Primed", "Painted", "Based", "Completed"];
 const createScenarioForm = document.getElementById("create-scenario-form");
 const scenariosList = document.getElementById("scenarios-list");
 const scenarioGameSelect = document.getElementById("scenario-game");
+const openCreateScenarioBtn = document.getElementById("open-create-scenario-btn");
+const createScenarioDialog = document.getElementById("create-scenario-dialog");
+const addRequirementDialog = document.getElementById("add-requirement-dialog");
+const addRequirementForm = document.getElementById("add-requirement-form");
+const requirementPickerDialog = document.getElementById("requirement-picker-dialog");
+const requirementPickerSelect = document.getElementById("requirement-picker-select");
+const requirementPickerAddBtn = document.getElementById("requirement-picker-add-btn");
+const editScenarioDialog = document.getElementById("edit-scenario-dialog");
+const editScenarioDialogName = document.getElementById("edit-scenario-dialog-name");
+const editScenarioDialogSaveBtn = document.getElementById("edit-scenario-dialog-save-btn");
+const editRequirementDialog = document.getElementById("edit-requirement-dialog");
+const editRequirementForm = document.getElementById("edit-requirement-form");
 
 let scenarios = loadScenarios();
 let entries = loadEntries();
-let openPickerRequirementId = null;
-let editingRequirementId = null;
-let editingScenarioId = null;
 const expandedScenarioIds = new Set();
 
 populateScenarioGameOptions();
 render();
+
+if (openCreateScenarioBtn instanceof HTMLButtonElement) {
+  openCreateScenarioBtn.addEventListener("click", () => {
+    if (createScenarioDialog instanceof HTMLDialogElement) createScenarioDialog.showModal();
+  });
+}
+
+if (addRequirementForm instanceof HTMLFormElement) {
+  addRequirementForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const scenarioId = addRequirementDialog instanceof HTMLDialogElement ? addRequirementDialog.dataset.scenarioId : null;
+    if (!scenarioId) return;
+    const scenario = scenarios.find((s) => s.id === scenarioId);
+    if (!scenario) return;
+    const formData = new FormData(addRequirementForm);
+    const requirement = normalizeRequirement({
+      id: createId(),
+      game: String(scenario.game || "").trim(),
+      faction: String(formData.get("faction") || "").trim(),
+      unit: String(formData.get("unit") || "").trim(),
+      type: String(formData.get("type") || "").trim(),
+      requiredCount: Number(formData.get("requiredCount") || 0),
+      assignments: []
+    });
+    if (!requirement) return;
+    scenario.requirements.push(requirement);
+    persistScenarios();
+    render();
+    addRequirementForm.reset();
+    const countInput = addRequirementForm.elements.namedItem("requiredCount");
+    if (countInput instanceof HTMLInputElement) countInput.value = "1";
+    if (addRequirementDialog instanceof HTMLDialogElement) addRequirementDialog.close();
+    if (window.appToast) window.appToast("Requirement added");
+  });
+}
+
+if (requirementPickerAddBtn instanceof HTMLButtonElement) {
+  requirementPickerAddBtn.addEventListener("click", () => {
+    if (!(requirementPickerDialog instanceof HTMLDialogElement) || !(requirementPickerSelect instanceof HTMLSelectElement)) return;
+    const scenarioId = requirementPickerDialog.dataset.scenarioId;
+    const requirementId = requirementPickerDialog.dataset.requirementId;
+    const unitId = requirementPickerSelect.value;
+    if (!scenarioId || !requirementId || !unitId) return;
+    assignUnit(scenarioId, requirementId, unitId);
+    refreshRequirementPickerDialog(scenarioId, requirementId);
+    if (window.appToast) window.appToast("Assignment added");
+  });
+}
+
+if (editScenarioDialogSaveBtn instanceof HTMLButtonElement) {
+  editScenarioDialogSaveBtn.addEventListener("click", () => {
+    if (!(editScenarioDialog instanceof HTMLDialogElement) || !(editScenarioDialogName instanceof HTMLInputElement)) return;
+    const scenarioId = editScenarioDialog.dataset.scenarioId;
+    if (!scenarioId) return;
+    const name = editScenarioDialogName.value.trim();
+    if (!name) return;
+    const scenario = scenarios.find((s) => s.id === scenarioId);
+    if (scenario) {
+      scenario.name = name;
+      persistScenarios();
+      render();
+    }
+    editScenarioDialog.close();
+    if (window.appToast) window.appToast("Scenario saved");
+  });
+}
+
+if (editRequirementForm instanceof HTMLFormElement) {
+  editRequirementForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!(editRequirementDialog instanceof HTMLDialogElement)) return;
+    const scenarioId = editRequirementDialog.dataset.scenarioId;
+    const requirementId = editRequirementDialog.dataset.requirementId;
+    const requirement = getRequirement(scenarioId, requirementId);
+    if (!requirement) return;
+    const formData = new FormData(editRequirementForm);
+    const updated = normalizeRequirement({
+      id: requirement.id,
+      game: requirement.game,
+      faction: String(formData.get("faction") || "").trim(),
+      unit: String(formData.get("unit") || "").trim(),
+      type: String(formData.get("type") || "").trim(),
+      requiredCount: Number(formData.get("requiredCount") || 0),
+      assignments: requirement.assignments
+    });
+    if (!updated) return;
+    requirement.faction = updated.faction;
+    requirement.unit = updated.unit;
+    requirement.type = updated.type;
+    requirement.requiredCount = updated.requiredCount;
+    persistScenarios();
+    render();
+    editRequirementDialog.close();
+    if (window.appToast) window.appToast("Requirement saved");
+  });
+}
 
 createScenarioForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -32,20 +137,7 @@ createScenarioForm.addEventListener("submit", (event) => {
   render();
   createScenarioForm.reset();
   populateScenarioGameOptions();
-});
-
-scenariosList.addEventListener("submit", (event) => {
-  const target = event.target;
-  if (!(target instanceof HTMLFormElement)) {
-    return;
-  }
-
-  if (!target.matches(".requirement-form")) {
-    return;
-  }
-
-  event.preventDefault();
-  addRequirement(target);
+  if (createScenarioDialog instanceof HTMLDialogElement) createScenarioDialog.close();
 });
 
 scenariosList.addEventListener("click", (event) => {
@@ -63,33 +155,15 @@ scenariosList.addEventListener("click", (event) => {
   } else if (target.dataset.action === "toggle-scenario-collapse" && scenarioId) {
     toggleScenarioCollapse(scenarioId);
   } else if (target.dataset.action === "edit-scenario" && scenarioId) {
-    editingScenarioId = scenarioId;
-    expandedScenarioIds.add(scenarioId);
-    openPickerRequirementId = null;
-    render();
-  } else if (target.dataset.action === "cancel-edit-scenario" && scenarioId) {
-    editingScenarioId = null;
-    render();
-  } else if (target.dataset.action === "save-scenario" && scenarioId) {
-    saveScenario(scenarioId);
+    openEditScenarioDialog(scenarioId);
+  } else if (target.dataset.action === "add-requirement" && scenarioId) {
+    openAddRequirementDialog(scenarioId);
   } else if (target.dataset.action === "delete-requirement" && scenarioId && requirementId) {
     deleteRequirement(scenarioId, requirementId);
-  } else if (target.dataset.action === "edit-requirement" && requirementId) {
-    editingRequirementId = requirementId;
-    openPickerRequirementId = null;
-    render();
-  } else if (target.dataset.action === "cancel-edit" && requirementId) {
-    editingRequirementId = null;
-    render();
-  } else if (target.dataset.action === "save-requirement" && scenarioId && requirementId) {
-    saveRequirementEdit(scenarioId, requirementId);
-  } else if (target.dataset.action === "toggle-picker" && requirementId) {
-    openPickerRequirementId = openPickerRequirementId === requirementId ? null : requirementId;
-    render();
-  } else if (target.dataset.action === "assign-selected" && scenarioId && requirementId) {
-    assignSelectedUnit(scenarioId, requirementId);
-  } else if (target.dataset.action === "assign-unit" && scenarioId && requirementId && unitId) {
-    assignUnit(scenarioId, requirementId, unitId);
+  } else if (target.dataset.action === "edit-requirement" && scenarioId && requirementId) {
+    openEditRequirementDialog(scenarioId, requirementId);
+  } else if (target.dataset.action === "open-picker" && scenarioId && requirementId) {
+    openRequirementPickerDialog(scenarioId, requirementId);
   } else if (target.dataset.action === "remove-assignment" && scenarioId && requirementId && unitId) {
     removeAssignment(scenarioId, requirementId, unitId);
   }
@@ -130,80 +204,34 @@ function render() {
     const card = document.createElement("section");
     card.className = "panel scenario-card";
 
-    const isEditingScenario = editingScenarioId === scenario.id;
-    const isExpanded = expandedScenarioIds.has(scenario.id) || isEditingScenario;
-    const headerName = isEditingScenario
-      ? `
-          <div class="entity-title-row">
-            <button
-              class="collapse-arrow"
-              type="button"
-              data-action="toggle-scenario-collapse"
-              data-scenario-id="${scenario.id}"
-              aria-expanded="true"
-              aria-label="Collapse scenario ${escapeHtml(scenario.name)}"
-            >
-              <span aria-hidden="true">▾</span>
-            </button>
-            <input class="inline-input" id="edit-scenario-name-${scenario.id}" value="${escapeHtml(scenario.name)}" />
-          </div>
-        `
-      : `
-          <div class="entity-title-row">
-            <button
-              class="collapse-arrow"
-              type="button"
-              data-action="toggle-scenario-collapse"
-              data-scenario-id="${scenario.id}"
-              aria-expanded="${isExpanded ? "true" : "false"}"
-              aria-label="${isExpanded ? "Collapse" : "Expand"} scenario ${escapeHtml(scenario.name)}"
-            >
-              <span aria-hidden="true">${isExpanded ? "▾" : "▸"}</span>
-            </button>
-            <span>${escapeHtml(scenario.name)}</span>
-            <span class="requirement-inline">${escapeHtml(scenario.game || "")}</span>
-          </div>
-        `;
-    const headerActions = isEditingScenario
-      ? `
-          <button class="icon-btn save" data-action="save-scenario" data-scenario-id="${scenario.id}" title="Save" aria-label="Save">&#10003;</button>
-          <button class="icon-btn cancel" data-action="cancel-edit-scenario" data-scenario-id="${scenario.id}" title="Cancel" aria-label="Cancel">&times;</button>
-          <button class="icon-btn delete" data-action="delete-scenario" data-scenario-id="${scenario.id}" title="Delete Scenario" aria-label="Delete Scenario">&times;</button>
-        `
-      : `
-          <button class="icon-btn" data-action="edit-scenario" data-scenario-id="${scenario.id}" title="Edit" aria-label="Edit">&#9998;</button>
-          <button class="icon-btn delete" data-action="delete-scenario" data-scenario-id="${scenario.id}" title="Delete Scenario" aria-label="Delete Scenario">&times;</button>
-        `;
+    const isExpanded = expandedScenarioIds.has(scenario.id);
 
     card.innerHTML = `
       <div class="scenario-header">
-        <h3 class="scenario-name">${headerName}</h3>
+        <div class="entity-title-row">
+          <button
+            class="collapse-arrow"
+            type="button"
+            data-action="toggle-scenario-collapse"
+            data-scenario-id="${scenario.id}"
+            aria-expanded="${isExpanded ? "true" : "false"}"
+            aria-label="${isExpanded ? "Collapse" : "Expand"} scenario ${escapeHtml(scenario.name)}"
+          >
+            <span aria-hidden="true">${isExpanded ? "▾" : "▸"}</span>
+          </button>
+          <span>${escapeHtml(scenario.name)}</span>
+          <span class="requirement-inline">${escapeHtml(scenario.game || "")}</span>
+        </div>
         <div class="row-actions">
-          ${headerActions}
+          <button class="icon-btn" data-action="edit-scenario" data-scenario-id="${scenario.id}" title="Edit" aria-label="Edit">&#9998;</button>
+          <button class="icon-btn delete" data-action="delete-scenario" data-scenario-id="${scenario.id}" title="Delete Scenario" aria-label="Delete Scenario">&times;</button>
         </div>
       </div>
       <div class="collapsible-body" ${isExpanded ? "" : "hidden"}>
-        ${isEditingScenario ? `
-          <form class="requirement-form" data-scenario-id="${scenario.id}">
-            <label>
-              Faction
-              <input name="faction" required />
-            </label>
-            <label>
-              Unit
-              <input name="unit" required />
-            </label>
-            <label>
-              Type
-              <input name="type" required />
-            </label>
-            <label>
-              Needed
-              <input name="requiredCount" type="number" min="1" value="1" required />
-            </label>
-            <button type="submit" title="Add Requirement">+</button>
-          </form>
-        ` : ""}
+        <div class="section-toolbar">
+          <h4>Requirements</h4>
+          <button class="btn-small" data-action="add-requirement" data-scenario-id="${scenario.id}" title="Add Requirement">Add Requirement</button>
+        </div>
         ${buildRequirementsTable(scenario)}
       </div>
     `;
@@ -239,13 +267,8 @@ function buildRequirementsTable(scenario) {
 }
 
 function buildRequirementRow(scenario, requirement) {
-  if (editingRequirementId === requirement.id) {
-    return buildRequirementEditRow(scenario, requirement);
-  }
-
   const assignedTotal = getAssignedTotal(requirement);
   const shortfall = Math.max(requirement.requiredCount - assignedTotal, 0);
-  const open = openPickerRequirementId === requirement.id;
 
   return `
     <tr>
@@ -261,42 +284,125 @@ function buildRequirementRow(scenario, requirement) {
       <td class="assignment-list">${buildAssignmentList(scenario, requirement)}</td>
       <td>
         <div class="row-actions">
-          <button class="icon-btn" data-action="edit-requirement" data-requirement-id="${requirement.id}" title="Edit" aria-label="Edit">&#9998;</button>
-          <button data-action="toggle-picker" data-requirement-id="${requirement.id}">${open ? "Close" : "Assign"}</button>
+          <button class="icon-btn" data-action="edit-requirement" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}" title="Edit" aria-label="Edit">&#9998;</button>
+          <button data-action="open-picker" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}">Assign</button>
           <button class="icon-btn delete" data-action="delete-requirement" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}" title="Delete" aria-label="Delete">&times;</button>
         </div>
       </td>
     </tr>
-    ${open ? `<tr class="requirement-picker-expand"><td colspan="6">${buildRequirementPicker(scenario, requirement)}</td></tr>` : ""}
   `;
 }
 
-function buildRequirementEditRow(scenario, requirement) {
-  const assignedTotal = getAssignedTotal(requirement);
-  const shortfall = Math.max(requirement.requiredCount - assignedTotal, 0);
+function openEditScenarioDialog(scenarioId) {
+  const scenario = getScenario(scenarioId);
+  if (!scenario || !(editScenarioDialog instanceof HTMLDialogElement) || !(editScenarioDialogName instanceof HTMLInputElement)) {
+    return;
+  }
+  editScenarioDialog.dataset.scenarioId = scenarioId;
+  editScenarioDialogName.value = scenario.name;
+  editScenarioDialog.showModal();
+}
 
-  return `
-    <tr>
-      <td>
-        <div class="requirement-edit-grid">
-          <input class="inline-input" id="edit-game-${requirement.id}" value="${escapeHtml(requirement.game)}" placeholder="Game" />
-          <input class="inline-input" id="edit-faction-${requirement.id}" value="${escapeHtml(requirement.faction)}" placeholder="Faction" />
-          <input class="inline-input" id="edit-unit-${requirement.id}" value="${escapeHtml(requirement.unit)}" placeholder="Unit" />
-          <input class="inline-input" id="edit-type-${requirement.id}" value="${escapeHtml(requirement.type)}" placeholder="Type" />
-        </div>
-      </td>
-      <td><input class="inline-input" id="edit-needed-${requirement.id}" type="number" min="1" value="${requirement.requiredCount}" /></td>
-      <td>${assignedTotal}</td>
-      <td>${shortfall === 0 ? '<span class="fit-badge fit-exact">Covered</span>' : `<span class="fit-badge fit-short">Short ${shortfall}</span>`}</td>
-      <td class="assignment-list">${buildAssignmentList(scenario, requirement)}</td>
-      <td>
-        <div class="row-actions">
-          <button class="icon-btn save" data-action="save-requirement" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}" title="Save" aria-label="Save">&#10003;</button>
-          <button class="icon-btn cancel" data-action="cancel-edit" data-requirement-id="${requirement.id}" title="Cancel" aria-label="Cancel">&times;</button>
-        </div>
-      </td>
-    </tr>
-  `;
+function openAddRequirementDialog(scenarioId) {
+  if (!(addRequirementDialog instanceof HTMLDialogElement) || !(addRequirementForm instanceof HTMLFormElement)) {
+    return;
+  }
+  addRequirementDialog.dataset.scenarioId = scenarioId;
+  addRequirementForm.reset();
+  const countInput = addRequirementForm.elements.namedItem("requiredCount");
+  if (countInput instanceof HTMLInputElement) countInput.value = "1";
+  addRequirementDialog.showModal();
+}
+
+function openEditRequirementDialog(scenarioId, requirementId) {
+  const requirement = getRequirement(scenarioId, requirementId);
+  if (!requirement || !(editRequirementDialog instanceof HTMLDialogElement) || !(editRequirementForm instanceof HTMLFormElement)) {
+    return;
+  }
+  editRequirementDialog.dataset.scenarioId = scenarioId;
+  editRequirementDialog.dataset.requirementId = requirementId;
+  
+  const factionInput = editRequirementForm.elements.namedItem("faction");
+  const unitInput = editRequirementForm.elements.namedItem("unit");
+  const typeInput = editRequirementForm.elements.namedItem("type");
+  const countInput = editRequirementForm.elements.namedItem("requiredCount");
+  
+  if (factionInput instanceof HTMLInputElement) factionInput.value = requirement.faction;
+  if (unitInput instanceof HTMLInputElement) unitInput.value = requirement.unit;
+  if (typeInput instanceof HTMLInputElement) typeInput.value = requirement.type;
+  if (countInput instanceof HTMLInputElement) countInput.value = String(requirement.requiredCount);
+  
+  editRequirementDialog.showModal();
+}
+
+function openRequirementPickerDialog(scenarioId, requirementId) {
+  if (!(requirementPickerDialog instanceof HTMLDialogElement)) {
+    return;
+  }
+  requirementPickerDialog.dataset.scenarioId = scenarioId;
+  requirementPickerDialog.dataset.requirementId = requirementId;
+  refreshRequirementPickerDialog(scenarioId, requirementId);
+  requirementPickerDialog.showModal();
+}
+
+function refreshRequirementPickerDialog(scenarioId, requirementId) {
+  const scenario = getScenario(scenarioId);
+  const requirement = getRequirement(scenarioId, requirementId);
+  if (!scenario || !requirement || !(requirementPickerSelect instanceof HTMLSelectElement)) {
+    return;
+  }
+
+  if (entries.length === 0) {
+    requirementPickerSelect.innerHTML = '<option disabled>No tracked minis available</option>';
+    if (requirementPickerAddBtn instanceof HTMLButtonElement) {
+      requirementPickerAddBtn.disabled = true;
+    }
+    return;
+  }
+
+  const options = entries
+    .map((entry) => {
+      if (!sameText(requirement.game, entry.game)) {
+        return null;
+      }
+
+      const available = getAvailableForRequirement(scenario, requirement, entry.id);
+      const alreadyAssigned = requirement.assignments.some((assignment) => assignment.entryId === entry.id);
+      if (available <= 0 || alreadyAssigned) {
+        return null;
+      }
+
+      const fit = getFitLabel(requirement, entry);
+      return {
+        id: entry.id,
+        unit: entry.unit,
+        available,
+        isClose: fit.label === "Close"
+      };
+    })
+    .filter((item) => item !== null)
+    .sort((a, b) => {
+      if (a.isClose !== b.isClose) {
+        return a.isClose ? -1 : 1;
+      }
+      return a.unit.localeCompare(b.unit, undefined, { sensitivity: "base" });
+    });
+
+  if (options.length === 0) {
+    requirementPickerSelect.innerHTML = '<option disabled>No unassigned units available</option>';
+    if (requirementPickerAddBtn instanceof HTMLButtonElement) {
+      requirementPickerAddBtn.disabled = true;
+    }
+    return;
+  }
+
+  requirementPickerSelect.innerHTML = options
+    .map((item) => `<option value="${item.id}">${escapeHtml(item.unit)} (${item.available} available)</option>`)
+    .join("");
+
+  if (requirementPickerAddBtn instanceof HTMLButtonElement) {
+    requirementPickerAddBtn.disabled = false;
+  }
 }
 
 function buildAssignmentList(scenario, requirement) {
@@ -325,136 +431,9 @@ function buildAssignmentList(scenario, requirement) {
   }).join("");
 }
 
-function buildRequirementPicker(scenario, requirement) {
-  if (entries.length === 0) {
-    return '<p class="picker-empty">No tracked minis available yet.</p>';
-  }
-
-  const options = entries
-    .map((entry) => {
-      if (!sameText(requirement.game, entry.game)) {
-        return null;
-      }
-
-      const available = getAvailableForRequirement(scenario, requirement, entry.id);
-      const alreadyAssigned = requirement.assignments.some((assignment) => assignment.entryId === entry.id);
-      if (available <= 0 || alreadyAssigned) {
-        return null;
-      }
-
-      const fit = getFitLabel(requirement, entry);
-      return {
-        id: entry.id,
-        unit: entry.unit,
-        available,
-        isClose: fit.label === "Close"
-      };
-    })
-    .filter((item) => item !== null)
-    .sort((a, b) => {
-      if (a.isClose !== b.isClose) {
-        return a.isClose ? -1 : 1;
-      }
-
-      return a.unit.localeCompare(b.unit, undefined, { sensitivity: "base" });
-    })
-    .map((item) => {
-      return `<option value="${item.id}">${escapeHtml(item.unit)} (${item.available} available)</option>`;
-    })
-    .join("");
-
-  if (!options) {
-    return '<p class="picker-empty">No unassigned owned minis are available for this requirement.</p>';
-  }
-
-  return `
-    <div class="requirement-picker">
-      <p class="picker-label">Assign owned units</p>
-      <div class="requirement-picker-row">
-        <select id="picker-select-${requirement.id}" class="assignment-select">
-          ${options}
-        </select>
-        <button data-action="assign-selected" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}" title="Add Assignment">+</button>
-      </div>
-    </div>
-  `;
-}
-
-function assignSelectedUnit(scenarioId, requirementId) {
-  const select = document.getElementById(`picker-select-${requirementId}`);
-  if (!(select instanceof HTMLSelectElement)) {
-    return;
-  }
-
-  const unitId = select.value;
-  if (!unitId) {
-    return;
-  }
-
-  assignUnit(scenarioId, requirementId, unitId);
-}
-
-function addRequirement(form) {
-  const scenarioId = form.dataset.scenarioId;
-  const scenario = scenarios.find((item) => item.id === scenarioId);
-  if (!scenario || editingScenarioId !== scenarioId) {
-    return;
-  }
-
-  const formData = new FormData(form);
-  const requirement = normalizeRequirement({
-    id: createId(),
-    game: String(scenario.game || "").trim(),
-    faction: String(formData.get("faction") || "").trim(),
-    unit: String(formData.get("unit") || "").trim(),
-    type: String(formData.get("type") || "").trim(),
-    requiredCount: Number(formData.get("requiredCount") || 0),
-    assignments: []
-  });
-
-  if (!requirement) {
-    return;
-  }
-
-  scenario.requirements.push(requirement);
-  persistScenarios();
-  render();
-  form.reset();
-
-  const countInput = form.elements.namedItem("requiredCount");
-  if (countInput instanceof HTMLInputElement) {
-    countInput.value = "1";
-  }
-}
-
 function deleteScenario(scenarioId) {
   scenarios = scenarios.filter((scenario) => scenario.id !== scenarioId);
   expandedScenarioIds.delete(scenarioId);
-  if (editingScenarioId === scenarioId) {
-    editingScenarioId = null;
-  }
-  persistScenarios();
-  render();
-}
-
-function saveScenario(scenarioId) {
-  const scenario = getScenario(scenarioId);
-  if (!scenario) {
-    return;
-  }
-
-  const input = document.getElementById(`edit-scenario-name-${scenarioId}`);
-  if (!(input instanceof HTMLInputElement)) {
-    return;
-  }
-
-  const name = input.value.trim();
-  if (!name) {
-    return;
-  }
-
-  scenario.name = name;
-  editingScenarioId = null;
   persistScenarios();
   render();
 }
@@ -462,24 +441,9 @@ function saveScenario(scenarioId) {
 function toggleScenarioCollapse(scenarioId) {
   if (expandedScenarioIds.has(scenarioId)) {
     expandedScenarioIds.delete(scenarioId);
-    if (editingScenarioId === scenarioId) {
-      editingScenarioId = null;
-    }
-
-    const scenario = getScenario(scenarioId);
-    if (scenario) {
-      const requirementIds = new Set(scenario.requirements.map((requirement) => requirement.id));
-      if (editingRequirementId && requirementIds.has(editingRequirementId)) {
-        editingRequirementId = null;
-      }
-      if (openPickerRequirementId && requirementIds.has(openPickerRequirementId)) {
-        openPickerRequirementId = null;
-      }
-    }
   } else {
     expandedScenarioIds.add(scenarioId);
   }
-
   render();
 }
 
@@ -490,52 +454,8 @@ function deleteRequirement(scenarioId, requirementId) {
   }
 
   scenario.requirements = scenario.requirements.filter((requirement) => requirement.id !== requirementId);
-  if (openPickerRequirementId === requirementId) {
-    openPickerRequirementId = null;
-  }
-  if (editingRequirementId === requirementId) {
-    editingRequirementId = null;
-  }
   persistScenarios();
   render();
-}
-
-function saveRequirementEdit(scenarioId, requirementId) {
-  const requirement = getRequirement(scenarioId, requirementId);
-  if (!requirement) {
-    return;
-  }
-
-  const updated = normalizeRequirement({
-    id: requirement.id,
-    game: valueFromEditInput(`edit-game-${requirementId}`),
-    faction: valueFromEditInput(`edit-faction-${requirementId}`),
-    unit: valueFromEditInput(`edit-unit-${requirementId}`),
-    type: valueFromEditInput(`edit-type-${requirementId}`),
-    requiredCount: Number(valueFromEditInput(`edit-needed-${requirementId}`)),
-    assignments: requirement.assignments
-  });
-
-  if (!updated) {
-    return;
-  }
-
-  requirement.game = updated.game;
-  requirement.faction = updated.faction;
-  requirement.unit = updated.unit;
-  requirement.type = updated.type;
-  requirement.requiredCount = updated.requiredCount;
-  editingRequirementId = null;
-  persistScenarios();
-  render();
-}
-
-function valueFromEditInput(id) {
-  const input = document.getElementById(id);
-  if (!(input instanceof HTMLInputElement)) {
-    return "";
-  }
-  return input.value.trim();
 }
 
 function assignUnit(scenarioId, requirementId, unitId) {

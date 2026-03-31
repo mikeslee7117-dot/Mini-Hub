@@ -83,25 +83,22 @@ body {
 
 .tracker-banner {
   position: relative;
-  min-height: 180px;
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid var(--line);
   background:
     linear-gradient(135deg, rgba(56, 95, 77, 0.94), rgba(41, 69, 56, 0.88)),
     linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent);
-  box-shadow: 0 18px 36px rgba(38, 60, 51, 0.14);
+  box-shadow: 0 8px 20px rgba(38, 60, 51, 0.14);
 }
 
 .tracker-banner-content {
   position: relative;
   z-index: 1;
-  min-height: 180px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 0.35rem;
-  padding: 1.1rem 1.2rem;
+  gap: 0.25rem;
+  padding: 0.7rem 1rem;
   color: #f8f6f1;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.24);
 }
@@ -119,25 +116,22 @@ body {
 /* ── Shared banner base for non-tracker pages ── */
 .page-banner {
   position: relative;
-  min-height: 160px;
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid var(--line);
   background:
     linear-gradient(135deg, rgba(56, 95, 77, 0.94), rgba(41, 69, 56, 0.88)),
     linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent);
-  box-shadow: 0 18px 36px rgba(38, 60, 51, 0.14);
+  box-shadow: 0 8px 20px rgba(38, 60, 51, 0.14);
 }
 
 .page-banner-content {
   position: relative;
   z-index: 1;
-  min-height: 160px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 0.35rem;
-  padding: 1.1rem 1.2rem;
+  gap: 0.25rem;
+  padding: 0.7rem 1rem;
   color: #f8f6f1;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.24);
 }
@@ -330,22 +324,23 @@ body {
 }
 
 .dashboard-hero {
-  padding: 1.25rem;
+  padding: 0.65rem 1rem;
   background:
     linear-gradient(135deg, rgba(56, 95, 77, 0.94), rgba(41, 69, 56, 0.88)),
     linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent);
   color: #f8f6f1;
-  box-shadow: 0 18px 36px rgba(38, 60, 51, 0.14);
+  box-shadow: 0 8px 20px rgba(38, 60, 51, 0.14);
 }
 
 .dashboard-hero h1 {
-  margin: 0.15rem 0 0.45rem;
-  font-size: clamp(1.8rem, 2.4vw, 2.8rem);
+  margin: 0.1rem 0 0.2rem;
+  font-size: clamp(1.3rem, 2.4vw, 2rem);
 }
 
 .dashboard-hero p {
   margin: 0;
   max-width: 700px;
+  font-size: 0.88rem;
 }
 
 .eyebrow {
@@ -893,6 +888,125 @@ td:last-child {
   margin-bottom: 0.7rem;
 }
 
+.section-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  margin-bottom: 0.6rem;
+}
+
+.section-toolbar h2,
+.section-toolbar h3,
+.section-toolbar h4 {
+  margin: 0;
+}
+
+.paint-filters {
+  grid-template-columns: 2fr 1fr 1fr auto;
+  margin-bottom: 0.7rem;
+}
+
+/* ── Dialog styles ── */
+dialog {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0;
+  background: var(--bg1);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  max-width: min(520px, 94vw);
+  width: 100%;
+}
+
+dialog::backdrop {
+  background: rgba(22, 20, 18, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 1rem 0.55rem;
+  border-bottom: 1px solid var(--line);
+  gap: 0.5rem;
+}
+
+.dialog-header h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.dialog-body {
+  padding: 1rem;
+}
+
+.dialog-form {
+  padding: 1rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.dialog-form.grid-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--line);
+  margin-top: 0.15rem;
+  grid-column: 1 / -1;
+}
+
+.dialog-footer-wrap {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0 1rem 0.9rem;
+}
+
+.btn-secondary {
+  background: rgba(34, 32, 29, 0.1);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.btn-secondary:hover {
+  background: rgba(34, 32, 29, 0.18);
+  transform: none;
+}
+
+.btn-small {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.82rem;
+  min-height: 30px;
+  border-radius: 8px;
+}
+
+.dialog-close-btn {
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  font-size: 1.2rem;
+  min-width: 1.7rem;
+  min-height: 1.7rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.dialog-close-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  transform: none;
+}
+
 .paint-assignment-form {
   display: grid;
   grid-template-columns: minmax(220px, 1.4fr) minmax(220px, 1.8fr) auto;
@@ -949,17 +1063,6 @@ td:last-child {
 
 .density-compact .app {
   gap: 0.75rem;
-}
-
-.density-compact .tracker-banner,
-.density-compact .page-banner {
-  min-height: 180px;
-}
-
-.density-compact .tracker-banner-content,
-.density-compact .page-banner-content {
-  min-height: 180px;
-  padding: 0.9rem 1rem;
 }
 
 .density-compact .panel {
@@ -1064,6 +1167,7 @@ td:last-child {
   .grid-form,
   .create-form,
   .filters,
+  .paint-filters,
   .requirement-form {
     grid-template-columns: 1fr;
   }
@@ -1125,16 +1229,9 @@ td:last-child {
     min-width: 520px;
   }
 
-  .tracker-banner,
-  .tracker-banner-content,
-  .page-banner,
-  .page-banner-content {
-    min-height: 160px;
-  }
-
   .tracker-banner-content h1,
   .page-banner-content h1 {
-    font-size: 1.45rem;
+    font-size: 1.25rem;
   }
 
   .requirement-picker-row {

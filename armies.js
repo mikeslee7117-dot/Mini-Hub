@@ -8,15 +8,56 @@ const STATUS_VALUES = ["Unpainted", "Primed", "Painted", "Based", "Completed"];
 const createForm = document.getElementById("create-army-form");
 const armiesList = document.getElementById("armies-list");
 const armyGameSelect = document.getElementById("army-game");
+const openCreateArmyBtn = document.getElementById("open-create-army-btn");
+const createArmyDialog = document.getElementById("create-army-dialog");
+const armyPickerDialog = document.getElementById("army-picker-dialog");
+const armyPickerDialogSelect = document.getElementById("army-picker-dialog-select");
+const armyPickerDialogAddBtn = document.getElementById("army-picker-dialog-add-btn");
+const editArmyDialog = document.getElementById("edit-army-dialog");
+const editArmyDialogName = document.getElementById("edit-army-dialog-name");
+const editArmyDialogSaveBtn = document.getElementById("edit-army-dialog-save-btn");
 
 let armies = loadArmies();
 let entries = loadEntries();
-let pickerOpenId = null;
-let editingArmyId = null;
 const expandedArmyIds = new Set();
 
 populateArmyGameOptions();
 render();
+
+if (openCreateArmyBtn instanceof HTMLButtonElement) {
+  openCreateArmyBtn.addEventListener("click", () => {
+    if (createArmyDialog instanceof HTMLDialogElement) createArmyDialog.showModal();
+  });
+}
+
+if (armyPickerDialogAddBtn instanceof HTMLButtonElement) {
+  armyPickerDialogAddBtn.addEventListener("click", () => {
+    if (!(armyPickerDialog instanceof HTMLDialogElement) || !(armyPickerDialogSelect instanceof HTMLSelectElement)) return;
+    const armyId = armyPickerDialog.dataset.armyId;
+    const unitId = armyPickerDialogSelect.value;
+    if (!armyId || !unitId) return;
+    addUnitToArmy(armyId, unitId);
+    refreshArmyPickerDialog(armyId);
+  });
+}
+
+if (editArmyDialogSaveBtn instanceof HTMLButtonElement) {
+  editArmyDialogSaveBtn.addEventListener("click", () => {
+    if (!(editArmyDialog instanceof HTMLDialogElement) || !(editArmyDialogName instanceof HTMLInputElement)) return;
+    const armyId = editArmyDialog.dataset.armyId;
+    if (!armyId) return;
+    const name = editArmyDialogName.value.trim();
+    if (!name) return;
+    const army = armies.find((a) => a.id === armyId);
+    if (army) {
+      army.name = name;
+      persistArmies();
+      render();
+    }
+    editArmyDialog.close();
+    if (window.appToast) window.appToast("Army saved");
+  });
+}
 
 createForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -30,6 +71,7 @@ createForm.addEventListener("submit", (event) => {
   persistArmies();
   render();
   createForm.reset();
+  if (createArmyDialog instanceof HTMLDialogElement) createArmyDialog.close();
 });
 
 armiesList.addEventListener("click", (event) => {
@@ -50,22 +92,11 @@ armiesList.addEventListener("click", (event) => {
   } else if (target.dataset.action === "toggle-collapse") {
     toggleArmyCollapse(armyId);
   } else if (target.dataset.action === "edit-army" && armyId) {
-    editingArmyId = armyId;
-    expandedArmyIds.add(armyId);
-    render();
-  } else if (target.dataset.action === "cancel-edit-army" && armyId) {
-    editingArmyId = null;
-    render();
-  } else if (target.dataset.action === "save-army" && armyId) {
-    saveArmyName(armyId);
+    openEditArmyDialog(armyId);
   } else if (target.dataset.action === "toggle-picker") {
     expandedArmyIds.add(armyId);
-    pickerOpenId = pickerOpenId === armyId ? null : armyId;
     render();
-  } else if (target.dataset.action === "assign-selected" && armyId) {
-    addSelectedUnitToArmy(armyId);
-  } else if (target.dataset.action === "add-unit" && unitId) {
-    addUnitToArmy(armyId, unitId);
+    openArmyPickerDialog(armyId);
   } else if (target.dataset.action === "remove-unit" && unitId) {
     removeUnitFromArmy(armyId, unitId);
   }
@@ -97,7 +128,7 @@ function render() {
   armiesList.innerHTML = "";
 
   if (armies.length === 0) {
-    armiesList.innerHTML = '<p class="empty-msg">No armies yet. Create one above.</p>';
+    armiesList.innerHTML = '<p class="empty-msg">No armies yet. Click "Add Army" to create one.</p>';
     return;
   }
 
@@ -108,84 +139,36 @@ function render() {
     const units = army.assignments
       .map((assignment) => {
         const entry = entries.find((item) => item.id === assignment.entryId);
-        if (!entry) {
-          return null;
-        }
-
-        return {
-          assignment,
-          entry,
-          maxQuantity: entry.number
-        };
+        if (!entry) return null;
+        return { assignment, entry, maxQuantity: entry.number };
       })
       .filter(Boolean);
 
-    const pickerOpen = pickerOpenId === army.id;
-    const isExpanded = expandedArmyIds.has(army.id) || pickerOpen || editingArmyId === army.id;
-    const available = entries.filter((entry) => {
-      const notAssigned = !army.assignments.some((assignment) => assignment.entryId === entry.id);
-      return notAssigned && sameText(entry.game, army.game);
-    });
+    const isExpanded = expandedArmyIds.has(army.id);
 
-    const isEditing = editingArmyId === army.id;
-    const title = isEditing
-      ? `
+    card.innerHTML = `
+      <div class="army-header">
+        <h3 class="army-name">
           <div class="entity-title-row">
-            <button
-              class="collapse-arrow"
-              type="button"
-              data-action="toggle-collapse"
-              data-army-id="${army.id}"
-              aria-expanded="true"
-              aria-label="Collapse army ${escapeHtml(army.name)}"
-            >
-              <span aria-hidden="true">▾</span>
-            </button>
-            <input class="inline-input" id="edit-army-name-${army.id}" value="${escapeHtml(army.name)}" />
-          </div>
-        `
-      : `
-          <div class="entity-title-row">
-            <button
-              class="collapse-arrow"
-              type="button"
-              data-action="toggle-collapse"
-              data-army-id="${army.id}"
+            <button class="collapse-arrow" type="button" data-action="toggle-collapse" data-army-id="${army.id}"
               aria-expanded="${isExpanded ? "true" : "false"}"
-              aria-label="${isExpanded ? "Collapse" : "Expand"} army ${escapeHtml(army.name)}"
-            >
+              aria-label="${isExpanded ? "Collapse" : "Expand"} army ${escapeHtml(army.name)}">
               <span aria-hidden="true">${isExpanded ? "▾" : "▸"}</span>
             </button>
             <span>${escapeHtml(army.name)}</span>
             <span class="requirement-inline">${escapeHtml(army.game)}</span>
           </div>
-        `;
-    const actionButtons = isEditing
-      ? `
-          <button class="icon-btn save" data-action="save-army" data-army-id="${army.id}" title="Save" aria-label="Save">&#10003;</button>
-          <button class="icon-btn cancel" data-action="cancel-edit-army" data-army-id="${army.id}" title="Cancel" aria-label="Cancel">&times;</button>
-          <button class="icon-btn delete" data-action="delete-army" data-army-id="${army.id}" title="Delete Army" aria-label="Delete Army">&times;</button>
-        `
-      : `
-          <button class="icon-btn" data-action="edit-army" data-army-id="${army.id}" title="Edit" aria-label="Edit">&#9998;</button>
-          <button class="icon-btn" data-action="toggle-picker" data-army-id="${army.id}" title="${pickerOpen ? "Close Picker" : "Add Units"}" aria-label="${pickerOpen ? "Close Picker" : "Add Units"}">
-            ${pickerOpen ? "&times;" : "+"}
-          </button>
-          <button class="icon-btn delete" data-action="delete-army" data-army-id="${army.id}" title="Delete Army" aria-label="Delete Army">&times;</button>
-        `;
-
-    card.innerHTML = `
-      <div class="army-header">
-        <h3 class="army-name">${title}</h3>
+        </h3>
         <div class="row-actions">
-          ${actionButtons}
+          <button class="icon-btn" data-action="edit-army" data-army-id="${army.id}" title="Edit" aria-label="Edit">&#9998;</button>
+          <button class="btn-small" data-action="toggle-picker" data-army-id="${army.id}" title="Add Units" aria-label="Add Units">Add Units</button>
+          <button class="icon-btn delete" data-action="delete-army" data-army-id="${army.id}" title="Delete Army" aria-label="Delete Army">&times;</button>
         </div>
       </div>
       <div class="collapsible-body" ${isExpanded ? "" : "hidden"}>
-        ${pickerOpen && !isEditing ? buildPicker(army.id, available) : ""}
         <div class="army-units">
           ${units.length === 0
-            ? '<p class="empty-msg">No units yet. Use "Add Units" above.</p>'
+            ? '<p class="empty-msg">No units yet. Use "Add Units" to add.</p>'
             : buildUnitsTable(army.id, units)}
         </div>
       </div>
@@ -193,6 +176,46 @@ function render() {
 
     armiesList.appendChild(card);
   }
+}
+
+function openArmyPickerDialog(armyId) {
+  if (!(armyPickerDialog instanceof HTMLDialogElement) || !(armyPickerDialogSelect instanceof HTMLSelectElement)) return;
+  armyPickerDialog.dataset.armyId = armyId;
+  refreshArmyPickerDialog(armyId);
+  armyPickerDialog.showModal();
+}
+
+function refreshArmyPickerDialog(armyId) {
+  if (!(armyPickerDialogSelect instanceof HTMLSelectElement)) return;
+  entries = loadEntries();
+  armies = loadArmies();
+  const army = armies.find((a) => a.id === armyId);
+  if (!army) return;
+  const available = entries.filter((entry) => {
+    const notAssigned = !army.assignments.some((a) => a.entryId === entry.id);
+    return notAssigned && sameText(entry.game, army.game);
+  });
+
+  if (available.length === 0) {
+    armyPickerDialogSelect.innerHTML = '<option value="">No available units for this army</option>';
+    if (armyPickerDialogAddBtn instanceof HTMLButtonElement) armyPickerDialogAddBtn.disabled = true;
+  } else {
+    armyPickerDialogSelect.innerHTML = available
+      .sort((a, b) => a.unit.localeCompare(b.unit, undefined, { sensitivity: "base" }))
+      .map((e) => `<option value="${e.id}">${escapeHtml(e.unit)} (${e.number} available)</option>`)
+      .join("");
+    if (armyPickerDialogAddBtn instanceof HTMLButtonElement) armyPickerDialogAddBtn.disabled = false;
+  }
+  render();
+}
+
+function openEditArmyDialog(armyId) {
+  if (!(editArmyDialog instanceof HTMLDialogElement) || !(editArmyDialogName instanceof HTMLInputElement)) return;
+  const army = armies.find((a) => a.id === armyId);
+  if (!army) return;
+  editArmyDialog.dataset.armyId = armyId;
+  editArmyDialogName.value = army.name;
+  editArmyDialog.showModal();
 }
 
 function buildUnitsTable(armyId, units) {
@@ -239,81 +262,9 @@ function buildQuantityControl(armyId, unitId, currentQuantity, maxQuantity) {
   return `<select class="quantity-select" data-action="set-quantity" data-army-id="${armyId}" data-unit-id="${unitId}">${options}</select>`;
 }
 
-function buildPicker(armyId, available) {
-  if (available.length === 0) {
-    return '<p class="picker-empty">No unassigned owned minis are available for this army game.</p>';
-  }
-
-  const options = available
-    .map((entry) => {
-      return {
-        id: entry.id,
-        unit: entry.unit,
-        available: entry.number
-      };
-    })
-    .sort((a, b) => a.unit.localeCompare(b.unit, undefined, { sensitivity: "base" }))
-    .map((item) => `<option value="${item.id}">${escapeHtml(item.unit)} (${item.available} available)</option>`)
-    .join("");
-
-  return `
-    <div class="picker">
-      <p class="picker-label">Pick units to add:</p>
-      <div class="requirement-picker-row">
-        <select id="army-picker-select-${armyId}" class="assignment-select">
-          ${options}
-        </select>
-        <button data-action="assign-selected" data-army-id="${armyId}" title="Add Unit">+</button>
-      </div>
-    </div>
-  `;
-}
-
-function addSelectedUnitToArmy(armyId) {
-  const select = document.getElementById(`army-picker-select-${armyId}`);
-  if (!(select instanceof HTMLSelectElement)) {
-    return;
-  }
-
-  const unitId = select.value;
-  if (!unitId) {
-    return;
-  }
-
-  addUnitToArmy(armyId, unitId);
-}
-
 function deleteArmy(id) {
   armies = armies.filter((army) => army.id !== id);
   expandedArmyIds.delete(id);
-  if (pickerOpenId === id) {
-    pickerOpenId = null;
-  }
-  if (editingArmyId === id) {
-    editingArmyId = null;
-  }
-  persistArmies();
-  render();
-}
-
-function saveArmyName(armyId) {
-  const army = armies.find((item) => item.id === armyId);
-  if (!army) {
-    return;
-  }
-
-  const input = document.getElementById(`edit-army-name-${armyId}`);
-  if (!(input instanceof HTMLInputElement)) {
-    return;
-  }
-
-  const nextName = input.value.trim();
-  if (!nextName) {
-    return;
-  }
-
-  army.name = nextName;
-  editingArmyId = null;
   persistArmies();
   render();
 }
@@ -321,16 +272,9 @@ function saveArmyName(armyId) {
 function toggleArmyCollapse(armyId) {
   if (expandedArmyIds.has(armyId)) {
     expandedArmyIds.delete(armyId);
-    if (pickerOpenId === armyId) {
-      pickerOpenId = null;
-    }
-    if (editingArmyId === armyId) {
-      editingArmyId = null;
-    }
   } else {
     expandedArmyIds.add(armyId);
   }
-
   render();
 }
 

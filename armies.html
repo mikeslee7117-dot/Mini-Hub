@@ -4,14 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Armies — Mini Tracker</title>
-  <link rel="stylesheet" href="styles.css?v=20260330" />
+  <link rel="stylesheet" href="styles.css?v=20260331" />
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
       <a href="index.html" class="site-brand" aria-label="Mini Hub dashboard">
         <span class="site-brand-title">Mini Hub</span>
-        <span class="site-brand-subtitle">Mini tracking workspace</span>
       </a>
 
       <details class="sidebar-menu">
@@ -35,28 +34,66 @@
       </section>
 
       <section class="panel">
-        <h2>Create Army</h2>
-        <form id="create-army-form" class="create-form army-create-form">
-          <label>
-            Army Name
-            <input id="army-name" name="armyName" required placeholder="e.g. Tournament List 2026" />
-          </label>
-          <label class="army-game-field">
-            Game
-            <select id="army-game" name="armyGame" required>
-              <option value="">Select a game</option>
-            </select>
-          </label>
-          <button type="submit">Create Army</button>
-        </form>
-      </section>
-
-      <section>
-        <h2 class="armies-heading">Your Armies</h2>
+        <div class="section-toolbar">
+          <h2>Your Armies</h2>
+          <button id="open-create-army-btn" type="button">Add Army</button>
+        </div>
         <div id="armies-list"></div>
       </section>
     </main>
   </div>
+
+  <!-- Create Army Dialog -->
+  <dialog id="create-army-dialog">
+    <div class="dialog-header">
+      <h2>Create Army</h2>
+      <button class="dialog-close-btn" type="button" data-close-dialog="create-army-dialog" aria-label="Close">&times;</button>
+    </div>
+    <form id="create-army-form" class="dialog-form">
+      <label>Army Name<input id="army-name" name="armyName" required placeholder="e.g. Tournament List 2026" /></label>
+      <label>Game
+        <select id="army-game" name="armyGame" required>
+          <option value="">Select a game</option>
+        </select>
+      </label>
+      <div class="dialog-footer">
+        <button type="button" data-close-dialog="create-army-dialog" class="btn-secondary">Cancel</button>
+        <button type="submit">Create Army</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Add Units to Army Dialog -->
+  <dialog id="army-picker-dialog">
+    <div class="dialog-header">
+      <h2>Add Units to Army</h2>
+      <button class="dialog-close-btn" type="button" data-close-dialog="army-picker-dialog" aria-label="Close">&times;</button>
+    </div>
+    <div class="dialog-body">
+      <label>Select Unit
+        <select id="army-picker-dialog-select" class="assignment-select"></select>
+      </label>
+    </div>
+    <div class="dialog-footer-wrap">
+      <button type="button" data-close-dialog="army-picker-dialog" class="btn-secondary">Done</button>
+      <button type="button" id="army-picker-dialog-add-btn">Add</button>
+    </div>
+  </dialog>
+
+  <!-- Edit Army Dialog -->
+  <dialog id="edit-army-dialog">
+    <div class="dialog-header">
+      <h2>Edit Army</h2>
+      <button class="dialog-close-btn" type="button" data-close-dialog="edit-army-dialog" aria-label="Close">&times;</button>
+    </div>
+    <div class="dialog-body">
+      <label>Army Name<input id="edit-army-dialog-name" required /></label>
+    </div>
+    <div class="dialog-footer-wrap">
+      <button type="button" data-close-dialog="edit-army-dialog" class="btn-secondary">Cancel</button>
+      <button type="button" id="edit-army-dialog-save-btn">Save</button>
+    </div>
+  </dialog>
 
   <script src="cloud-sync.js"></script>
   <script src="ui.js"></script>

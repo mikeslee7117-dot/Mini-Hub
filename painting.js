@@ -7,102 +7,188 @@ const LEGACY_ENTRIES_KEY = "mini-tracker-entries";
 const ENTRY_BACKUP_KEY = "mini-tracker-entries-backup-v1";
 const STATUS_VALUES = ["Unpainted", "Primed", "Painted", "Based", "Completed"];
 
-const paintForm = document.getElementById("paint-form");
+// New dialog-based element references
+const paintFiltersForm = document.getElementById("paint-filters-form");
+const paintFilterSearch = document.getElementById("paint-filter-search");
+const paintFilterType = document.getElementById("paint-filter-type");
+const paintFilterBrand = document.getElementById("paint-filter-brand");
+const paintFilterClear = document.getElementById("paint-filter-clear");
+
+const openAddPaintBtn = document.getElementById("open-add-paint-btn");
+const addPaintDialog = document.getElementById("add-paint-dialog");
+const addPaintForm = document.getElementById("add-paint-form");
+
+const openAddUnitBtn = document.getElementById("open-add-unit-btn");
+const addUnitDialog = document.getElementById("add-unit-dialog");
+const addUnitForm = document.getElementById("add-unit-form");
+const addUnitSelect = document.getElementById("add-unit-select");
+
+const editPaintDialog = document.getElementById("edit-paint-dialog");
+const editPaintForm = document.getElementById("edit-paint-form");
+
+const editPlanDialog = document.getElementById("edit-plan-dialog");
+
 const paintsBody = document.getElementById("paints-body");
-const paintUnitForm = document.getElementById("paint-unit-form");
-const paintUnitSelect = document.getElementById("paint-unit-select");
 const paintPlansRoot = document.getElementById("paint-plans");
 
 let paints = loadPaints();
 let entries = loadEntries();
 let paintPlans = loadPaintPlans();
-let editingPaintId = null;
-let editingPlanId = null;
+
+// Filter state
+let paintFilterState = {
+  search: "",
+  type: "all",
+  brand: "all"
+};
 
 render();
 
-paintForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-
-  const formData = new FormData(paintForm);
-  const paint = normalizePaint({
-    id: createId(),
-    name: String(formData.get("name") || "").trim(),
-    type: String(formData.get("type") || "").trim(),
-    brand: String(formData.get("brand") || "").trim()
+// Wire filter inputs
+if (paintFilterSearch instanceof HTMLInputElement) {
+  paintFilterSearch.addEventListener("input", () => {
+    paintFilterState.search = paintFilterSearch.value;
+    renderPaintsTable();
   });
+}
 
-  if (!paint) {
-    return;
-  }
-
-  paints.unshift(paint);
-  persistPaints();
-  render();
-  paintForm.reset();
-});
-
-paintsBody.addEventListener("click", (event) => {
-  const target = event.target;
-  if (!(target instanceof HTMLButtonElement)) {
-    return;
-  }
-
-  const paintId = target.dataset.paintId;
-  if (!paintId) {
-    return;
-  }
-
-  if (target.dataset.action === "edit-paint") {
-    editingPaintId = paintId;
+if (paintFilterType instanceof HTMLSelectElement) {
+  paintFilterType.addEventListener("change", () => {
+    paintFilterState.type = paintFilterType.value;
     renderPaintsTable();
-  } else if (target.dataset.action === "cancel-edit-paint") {
-    editingPaintId = null;
+  });
+}
+
+if (paintFilterBrand instanceof HTMLSelectElement) {
+  paintFilterBrand.addEventListener("change", () => {
+    paintFilterState.brand = paintFilterBrand.value;
     renderPaintsTable();
-  } else if (target.dataset.action === "save-paint") {
-    savePaintEdit(paintId);
-  } else if (target.dataset.action === "delete-paint") {
-    deletePaint(paintId);
-  }
-});
+  });
+}
 
-paintUnitForm.addEventListener("submit", (event) => {
-  event.preventDefault();
+if (paintFilterClear instanceof HTMLButtonElement) {
+  paintFilterClear.addEventListener("click", () => {
+    paintFilterState = { search: "", type: "all", brand: "all" };
+    if (paintFilterSearch instanceof HTMLInputElement) paintFilterSearch.value = "";
+    if (paintFilterType instanceof HTMLSelectElement) paintFilterType.value = "all";
+    if (paintFilterBrand instanceof HTMLSelectElement) paintFilterBrand.value = "all";
+    renderPaintsTable();
+  });
+}
 
-  if (!(paintUnitSelect instanceof HTMLSelectElement)) {
-    return;
-  }
+// Add Paint dialog
+if (openAddPaintBtn instanceof HTMLButtonElement) {
+  openAddPaintBtn.addEventListener("click", () => {
+    if (addPaintDialog instanceof HTMLDialogElement) addPaintDialog.showModal();
+  });
+}
 
-  const entryId = paintUnitSelect.value;
-  if (!entryId || paintPlans.some((plan) => plan.entryId === entryId)) {
-    return;
-  }
+if (addPaintForm instanceof HTMLFormElement) {
+  addPaintForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const formData = new FormData(addPaintForm);
+    const paint = normalizePaint({
+      id: createId(),
+      name: String(formData.get("name") || "").trim(),
+      type: String(formData.get("type") || "").trim(),
+      brand: String(formData.get("brand") || "").trim()
+    });
+    if (!paint) return;
+    paints.unshift(paint);
+    persistPaints();
+    render();
+    addPaintForm.reset();
+    if (addPaintDialog instanceof HTMLDialogElement) addPaintDialog.close();
+    if (window.appToast) window.appToast("Paint added");
+  });
+}
 
-  paintPlans.unshift({ id: createId(), entryId, assignments: [] });
+// Add Unit dialog
+if (openAddUnitBtn instanceof HTMLButtonElement) {
+  openAddUnitBtn.addEventListener("click", () => {
+    if (addUnitDialog instanceof HTMLDialogElement) {
+      refreshAddUnitDialog();
+      addUnitDialog.showModal();
+    }
+  });
+}
+
+if (addUnitForm instanceof HTMLFormElement) {
+  addUnitForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!(addUnitSelect instanceof HTMLSelectElement)) return;
+    const entryId = addUnitSelect.value;
+    if (!entryId || paintPlans.some((plan) => plan.entryId === entryId)) return;
+    paintPlans.unshift({ id: createId(), entryId, assignments: [] });
+    persistPaintPlans();
+    render();
+    addUnitForm.reset();
+    addUnitSelect.value = "";
+    if (addUnitDialog instanceof HTMLDialogElement) addUnitDialog.close();
+    if (window.appToast) window.appToast("Unit added");
+  });
+}
+
+// Wire edit paint dialog submit
+if (editPaintForm instanceof HTMLFormElement) {
+  editPaintForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!(editPaintDialog instanceof HTMLDialogElement)) return;
+    const paintId = editPaintDialog.dataset.paintId;
+    if (!paintId) return;
+    const paint = paints.find(p => p.id === paintId);
+    if (!paint) return;
+    
+    const formData = new FormData(editPaintForm);
+    const updated = normalizePaint({
+      id: paint.id,
+      name: String(formData.get("name") || "").trim(),
+      type: String(formData.get("type") || "").trim(),
+      brand: String(formData.get("brand") || "").trim()
+    });
+    
+    if (!updated) return;
+    paint.name = updated.name;
+    paint.type = updated.type;
+    paint.brand = updated.brand;
+    persistPaints();
+    render();
+    editPaintForm.reset();
+    editPaintDialog.close();
+    if (window.appToast) window.appToast("Paint saved");
+  });
+}
+
+// Wire add assignment handler (delegated from dialog)
+document.addEventListener("click", (event) => {
+  const btn = event.target.closest("button[data-action='add-assignment']");
+  if (!btn || !(editPlanDialog instanceof HTMLDialogElement)) return;
+  
+  const planId = btn.dataset.planId;
+  if (!planId) return;
+  
+  const plan = paintPlans.find(p => p.id === planId);
+  if (!plan) return;
+  
+  const paintSelect = editPlanDialog.querySelector(`#paint-select-${planId}`);
+  const areasInput = editPlanDialog.querySelector(`#areas-input-${planId}`);
+  if (!(paintSelect instanceof HTMLSelectElement) || !(areasInput instanceof HTMLInputElement)) return;
+  
+  const paintId = paintSelect.value;
+  const areas = areasInput.value.trim();
+  if (!paintId || !areas) return;
+  
+  plan.assignments.push({
+    id: createId(),
+    paintId,
+    areas
+  });
+  
   persistPaintPlans();
-  render();
-  paintUnitSelect.value = "";
-});
-
-paintPlansRoot.addEventListener("click", (event) => {
-  const target = event.target;
-  if (!(target instanceof HTMLButtonElement)) {
-    return;
-  }
-
-  const planId = target.dataset.planId;
-  const assignmentId = target.dataset.assignmentId;
-
-  if (target.dataset.action === "delete-plan" && planId) {
-    deletePlan(planId);
-  } else if (target.dataset.action === "toggle-edit-plan" && planId) {
-    editingPlanId = editingPlanId === planId ? null : planId;
-    renderPaintPlans();
-  } else if (target.dataset.action === "add-assignment" && planId) {
-    addAssignment(planId);
-  } else if (target.dataset.action === "delete-assignment" && planId && assignmentId) {
-    deleteAssignment(planId, assignmentId);
-  }
+  // Refresh the dialog content
+  const newContent = buildPlanEditorContent(plan);
+  editPlanDialog.innerHTML = newContent;
+  if (window.appToast) window.appToast("Paint assigned");
 });
 
 function render() {
@@ -110,61 +196,98 @@ function render() {
   paints = loadPaints();
   paintPlans = loadPaintPlans();
   cleanupPaintPlans();
+  updateFilterOptions();
   renderPaintsTable();
-  renderUnitSelect();
+  refreshAddUnitDialog();
   renderPaintPlans();
 }
 
 function renderPaintsTable() {
   paintsBody.innerHTML = "";
 
-  const sortedPaints = getSortedPaints();
+  const filteredPaints = getFilteredPaints();
 
-  if (sortedPaints.length === 0) {
-    paintsBody.innerHTML = '<tr><td colspan="4">No paints yet. Add your first paint above.</td></tr>';
+  if (filteredPaints.length === 0) {
+    const msg = paints.length === 0 
+      ? "No paints yet. Add your first paint above." 
+      : "No paints match your filters.";
+    paintsBody.innerHTML = `<tr><td colspan="4">${msg}</td></tr>`;
     return;
   }
 
-  for (const paint of sortedPaints) {
+  for (const paint of filteredPaints) {
     const row = document.createElement("tr");
-
-    if (editingPaintId === paint.id) {
-      row.innerHTML = `
-        <td><input class="inline-input" id="edit-paint-name-${paint.id}" value="${escapeHtml(paint.name)}" /></td>
-        <td><input class="inline-input" id="edit-paint-type-${paint.id}" value="${escapeHtml(paint.type)}" /></td>
-        <td><input class="inline-input" id="edit-paint-brand-${paint.id}" value="${escapeHtml(paint.brand)}" /></td>
-        <td>
-          <div class="row-actions">
-            <button class="icon-btn save" data-action="save-paint" data-paint-id="${paint.id}" title="Save" aria-label="Save">&#10003;</button>
-            <button class="icon-btn cancel" data-action="cancel-edit-paint" data-paint-id="${paint.id}" title="Cancel" aria-label="Cancel">&times;</button>
-          </div>
-        </td>
-      `;
-    } else {
-      row.innerHTML = `
-        <td>${escapeHtml(paint.name)}</td>
-        <td>${escapeHtml(paint.type)}</td>
-        <td>${escapeHtml(paint.brand)}</td>
-        <td>
-          <div class="row-actions">
-            <button class="icon-btn" data-action="edit-paint" data-paint-id="${paint.id}" title="Edit" aria-label="Edit">&#9998;</button>
-            <button class="icon-btn delete" data-action="delete-paint" data-paint-id="${paint.id}" title="Delete" aria-label="Delete">&times;</button>
-          </div>
-        </td>
-      `;
-    }
-
+    row.innerHTML = `
+      <td>${escapeHtml(paint.name)}</td>
+      <td>${escapeHtml(paint.type)}</td>
+      <td>${escapeHtml(paint.brand)}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" data-action="edit-paint" data-paint-id="${paint.id}" title="Edit" aria-label="Edit">&#9998;</button>
+          <button class="icon-btn delete" data-action="delete-paint" data-paint-id="${paint.id}" title="Delete" aria-label="Delete">&times;</button>
+        </div>
+      </td>
+    `;
     paintsBody.appendChild(row);
+  }
+  
+  // Wire edit and delete handlers
+  paintsBody.addEventListener("click", (event) => {
+    const target = event.target.closest("button");
+    if (!target) return;
+    const paintId = target.dataset.paintId;
+    if (!paintId) return;
+    if (target.dataset.action === "edit-paint") {
+      openEditPaintDialog(paintId);
+    } else if (target.dataset.action === "delete-paint") {
+      deletePaint(paintId);
+    }
+  });
+}
+
+function getFilteredPaints() {
+  return getSortedPaints().filter((paint) => {
+    const searchLower = paintFilterState.search.toLowerCase();
+    const matchesSearch = !searchLower || 
+      paint.name.toLowerCase().includes(searchLower) ||
+      paint.type.toLowerCase().includes(searchLower) ||
+      paint.brand.toLowerCase().includes(searchLower);
+    
+    const matchesType = paintFilterState.type === "all" || paint.type === paintFilterState.type;
+    const matchesBrand = paintFilterState.brand === "all" || paint.brand === paintFilterState.brand;
+    
+    return matchesSearch && matchesType && matchesBrand;
+  });
+}
+
+function updateFilterOptions() {
+  const types = [...new Set(paints.map(p => p.type).filter(t => t))].sort();
+  const brands = [...new Set(paints.map(p => p.brand).filter(b => b))].sort();
+  
+  if (paintFilterType instanceof HTMLSelectElement) {
+    const currentValue = paintFilterType.value;
+    paintFilterType.innerHTML = '<option value="all">All Types</option>' + 
+      types.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
+    paintFilterType.value = currentValue;
+  }
+  
+  if (paintFilterBrand instanceof HTMLSelectElement) {
+    const currentValue = paintFilterBrand.value;
+    paintFilterBrand.innerHTML = '<option value="all">All Brands</option>' + 
+      brands.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join("");
+    paintFilterBrand.value = currentValue;
   }
 }
 
-function renderUnitSelect() {
-  if (!(paintUnitSelect instanceof HTMLSelectElement)) {
+function refreshAddUnitDialog() {
+  if (!(addUnitSelect instanceof HTMLSelectElement)) {
     return;
   }
 
-  const selected = paintUnitSelect.value;
+  const selected = addUnitSelect.value;
+  const assignedEntryIds = new Set(paintPlans.map(p => p.entryId));
   const options = entries
+    .filter(entry => !assignedEntryIds.has(entry.id))
     .map((entry) => {
       const label = `${entry.unit} (${entry.game} / ${entry.faction})`;
       return { id: entry.id, label };
@@ -173,19 +296,16 @@ function renderUnitSelect() {
     .map((item) => `<option value="${item.id}">${escapeHtml(item.label)}</option>`)
     .join("");
 
-  paintUnitSelect.innerHTML = `<option value="">Select a unit</option>${options}`;
+  addUnitSelect.innerHTML = `<option value="">Select a unit</option>${options}`;
   if (selected && entries.some((entry) => entry.id === selected)) {
-    paintUnitSelect.value = selected;
+    addUnitSelect.value = selected;
   }
 }
 
 function renderPaintPlans() {
   paintPlansRoot.innerHTML = "";
-  if (editingPlanId && !paintPlans.some((plan) => plan.id === editingPlanId)) {
-    editingPlanId = null;
-  }
-
   const plans = getSortedPaintPlans();
+  
   if (plans.length === 0) {
     paintPlansRoot.innerHTML = '<p class="empty-msg">No units added yet. Select a unit above to start assigning paints.</p>';
     return;
@@ -207,6 +327,21 @@ function renderPaintPlans() {
       </table>
     </div>
   `;
+  
+  // Wire click handlers for plan actions
+  paintPlansRoot.addEventListener("click", (event) => {
+    const target = event.target.closest("button");
+    if (!target) return;
+    const planId = target.dataset.planId;
+    const assignmentId = target.dataset.assignmentId;
+    if (target.dataset.action === "delete-plan" && planId) {
+      deletePlan(planId);
+    } else if (target.dataset.action === "edit-plan" && planId) {
+      openEditPlanDialog(planId);
+    } else if (target.dataset.action === "delete-assignment" && planId && assignmentId) {
+      deleteAssignment(planId, assignmentId);
+    }
+  });
 }
 
 function buildPlanRow(plan) {
@@ -215,7 +350,6 @@ function buildPlanRow(plan) {
     return "";
   }
 
-  const canEdit = editingPlanId === plan.id;
   return `
     <tr>
       <td>
@@ -225,23 +359,8 @@ function buildPlanRow(plan) {
       <td>${buildAssignmentSummary(plan)}</td>
       <td>
         <div class="row-actions">
-          <button class="icon-btn ${canEdit ? "save" : ""}" data-action="toggle-edit-plan" data-plan-id="${plan.id}" title="${canEdit ? "Done" : "Edit"}" aria-label="${canEdit ? "Done" : "Edit"}">${canEdit ? "&#10003;" : "&#9998;"}</button>
+          <button class="icon-btn" data-action="edit-plan" data-plan-id="${plan.id}" title="Edit" aria-label="Edit">&#9998;</button>
           <button class="icon-btn delete" data-action="delete-plan" data-plan-id="${plan.id}" title="Remove Unit" aria-label="Remove Unit">&times;</button>
-        </div>
-      </td>
-    </tr>
-    ${canEdit ? buildPlanEditorRow(plan) : ""}
-  `;
-}
-
-function buildPlanEditorRow(plan) {
-  return `
-    <tr class="requirement-picker-expand">
-      <td colspan="3">
-        <div class="requirement-picker">
-          <p class="picker-label">Edit Unit Paints</p>
-          ${buildAssignmentAddRow(plan)}
-          ${buildAssignmentsTable(plan)}
         </div>
       </td>
     </tr>
@@ -268,6 +387,52 @@ function buildSummaryChip(assignment) {
   }
 
   return `<span class="assignment-chip">${escapeHtml(paint.name)}: ${escapeHtml(assignment.areas)}</span>`;
+}
+
+function openEditPaintDialog(paintId) {
+  const paint = paints.find(p => p.id === paintId);
+  if (!paint || !(editPaintDialog instanceof HTMLDialogElement) || !(editPaintForm instanceof HTMLFormElement)) {
+    return;
+  }
+  
+  editPaintDialog.dataset.paintId = paintId;
+  const nameInput = editPaintForm.elements.namedItem("name");
+  const typeInput = editPaintForm.elements.namedItem("type");
+  const brandInput = editPaintForm.elements.namedItem("brand");
+  
+  if (nameInput instanceof HTMLInputElement) nameInput.value = paint.name;
+  if (typeInput instanceof HTMLInputElement) typeInput.value = paint.type;
+  if (brandInput instanceof HTMLInputElement) brandInput.value = paint.brand;
+  
+  editPaintDialog.showModal();
+}
+
+function openEditPlanDialog(planId) {
+  const plan = paintPlans.find(p => p.id === planId);
+  if (!plan || !(editPlanDialog instanceof HTMLDialogElement)) {
+    return;
+  }
+  
+  editPlanDialog.dataset.planId = planId;
+  // Build the edit content inside the dialog
+  editPlanDialog.innerHTML = buildPlanEditorContent(plan);
+  editPlanDialog.showModal();
+}
+
+function buildPlanEditorContent(plan) {
+  return `
+    <div class="dialog-header">
+      <h3>Edit Unit Paints</h3>
+      <button class="dialog-close-btn" type="button" data-close-dialog="edit-plan-dialog" aria-label="Close">&times;</button>
+    </div>
+    <div class="dialog-body">
+      <div class="requirement-picker">
+        <p class="picker-label">Assign owned units</p>
+        ${buildAssignmentAddRow(plan)}
+        ${buildAssignmentsTable(plan)}
+      </div>
+    </div>
+  `;
 }
 
 function buildAssignmentAddRow(plan) {
@@ -348,81 +513,53 @@ function buildAssignmentRow(planId, assignment) {
   `;
 }
 
-function savePaintEdit(paintId) {
-  const paint = paints.find((item) => item.id === paintId);
-  if (!paint) {
-    return;
-  }
-
-  const updated = normalizePaint({
-    id: paint.id,
-    name: valueFromInput(`edit-paint-name-${paintId}`),
-    type: valueFromInput(`edit-paint-type-${paintId}`),
-    brand: valueFromInput(`edit-paint-brand-${paintId}`)
-  });
-
-  if (!updated) {
-    return;
-  }
-
-  paint.name = updated.name;
-  paint.type = updated.type;
-  paint.brand = updated.brand;
-  editingPaintId = null;
-  persistPaints();
-  render();
-}
-
 function deletePaint(paintId) {
   paints = paints.filter((paint) => paint.id !== paintId);
-  if (editingPaintId === paintId) {
-    editingPaintId = null;
-  }
-
   for (const plan of paintPlans) {
     plan.assignments = plan.assignments.filter((assignment) => assignment.paintId !== paintId);
   }
-
   persistPaints();
   persistPaintPlans();
   render();
+  if (window.appToast) window.appToast("Paint deleted");
 }
 
 function deletePlan(planId) {
   paintPlans = paintPlans.filter((plan) => plan.id !== planId);
-  if (editingPlanId === planId) {
-    editingPlanId = null;
-  }
   persistPaintPlans();
   render();
+  if (window.appToast) window.appToast("Unit removed");
 }
 
-function addAssignment(planId) {
-  const plan = paintPlans.find((item) => item.id === planId);
-  if (!plan) {
-    return;
+function buildAssignmentAddRow(plan) {
+  const sortedPaints = getSortedPaints();
+  if (sortedPaints.length === 0) {
+    return '<p class="picker-empty">No paints available yet. Add paints in the Paint Inventory section first.</p>';
   }
 
-  const paintSelect = document.getElementById(`paint-select-${planId}`);
-  const areasInput = document.getElementById(`areas-input-${planId}`);
-  if (!(paintSelect instanceof HTMLSelectElement) || !(areasInput instanceof HTMLInputElement)) {
-    return;
-  }
+  const options = sortedPaints
+    .map((paint) => ({
+      id: paint.id,
+      label: `${paint.name} (${paint.brand} / ${paint.type})`
+    }))
+    .map((item) => `<option value="${item.id}">${escapeHtml(item.label)}</option>`)
+    .join("");
 
-  const paintId = paintSelect.value;
-  const areas = areasInput.value.trim();
-  if (!paintId || !areas) {
-    return;
-  }
-
-  plan.assignments.push({
-    id: createId(),
-    paintId,
-    areas
-  });
-
-  persistPaintPlans();
-  render();
+  return `
+    <div class="paint-assignment-form">
+      <label>
+        Paint
+        <select id="paint-select-${plan.id}" class="assignment-select">
+          ${options}
+        </select>
+      </label>
+      <label>
+        Area(s)
+        <input id="areas-input-${plan.id}" class="inline-input" placeholder="e.g. Head, Legs, Armor" />
+      </label>
+      <button type="button" class="btn-small" data-action="add-assignment" data-plan-id="${plan.id}" title="Add Paint">Add</button>
+    </div>
+  `;
 }
 
 function deleteAssignment(planId, assignmentId) {

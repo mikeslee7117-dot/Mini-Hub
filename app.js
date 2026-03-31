@@ -19,6 +19,10 @@ const statUnits = document.getElementById("stat-units");
 const statTotal = document.getElementById("stat-total");
 const statCompleted = document.getElementById("stat-completed");
 const statPercent = document.getElementById("stat-percent");
+const addEntryDialog = document.getElementById("add-entry-dialog");
+const editEntryDialog = document.getElementById("edit-entry-dialog");
+const editEntryForm = document.getElementById("edit-entry-form");
+const openAddEntryBtn = document.getElementById("open-add-entry-btn");
 
 let entries = loadEntries();
 let armies = loadArmiesData();
@@ -32,6 +36,37 @@ let filters = {
 let editingId = null;
 
 render();
+
+if (openAddEntryBtn instanceof HTMLButtonElement) {
+  openAddEntryBtn.addEventListener("click", () => {
+    if (addEntryDialog instanceof HTMLDialogElement) addEntryDialog.showModal();
+  });
+}
+
+if (editEntryForm instanceof HTMLFormElement) {
+  editEntryForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!editingId) return;
+    const updated = {
+      id: editingId,
+      game: getDialogValue("dialog-edit-game"),
+      faction: getDialogValue("dialog-edit-faction"),
+      unit: getDialogValue("dialog-edit-unit"),
+      number: Number(getDialogValue("dialog-edit-number")),
+      type: getDialogValue("dialog-edit-type"),
+      status: getDialogValue("dialog-edit-status")
+    };
+    if (!isValidEntry(updated)) return;
+    const index = entries.findIndex((e) => e.id === editingId);
+    if (index === -1) return;
+    entries[index] = updated;
+    editingId = null;
+    persistEntries();
+    render();
+    if (editEntryDialog instanceof HTMLDialogElement) editEntryDialog.close();
+    if (window.appToast) window.appToast("Changes saved");
+  });
+}
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -60,6 +95,10 @@ form.addEventListener("submit", (event) => {
   if (statusInput instanceof HTMLSelectElement) {
     statusInput.value = "Unpainted";
   }
+
+  if (addEntryDialog instanceof HTMLDialogElement) {
+    addEntryDialog.close();
+  }
 });
 
 entriesBody.addEventListener("click", (event) => {
@@ -78,13 +117,7 @@ entriesBody.addEventListener("click", (event) => {
   } else if (target.dataset.action === "copy") {
     copyToForm(id);
   } else if (target.dataset.action === "edit") {
-    editingId = id;
-    render();
-  } else if (target.dataset.action === "cancel") {
-    editingId = null;
-    render();
-  } else if (target.dataset.action === "save") {
-    saveEdit(id);
+    editEntry(id);
   }
 });
 
@@ -200,12 +233,6 @@ function render() {
   for (const entry of visibleEntries) {
     const row = document.createElement("tr");
 
-    if (editingId === entry.id) {
-      row.innerHTML = buildEditRow(entry);
-      entriesBody.appendChild(row);
-      continue;
-    }
-
     row.innerHTML = `
       <td>${escapeHtml(entry.game)}</td>
       <td>${escapeHtml(entry.faction)}</td>
@@ -277,10 +304,8 @@ function copyToForm(id) {
   setFormField("type", item.type);
   setFormField("status", item.status);
 
-  const firstField = form.elements.namedItem("game");
-  if (firstField instanceof HTMLInputElement) {
-    firstField.focus();
-    firstField.select();
+  if (addEntryDialog instanceof HTMLDialogElement) {
+    addEntryDialog.showModal();
   }
 }
 
@@ -292,37 +317,36 @@ function setFormField(name, value) {
 }
 
 function saveEdit(id) {
-  const updated = {
-    id,
-    game: valueFromEditInput("edit-game", id),
-    faction: valueFromEditInput("edit-faction", id),
-    unit: valueFromEditInput("edit-unit", id),
-    number: Number(valueFromEditInput("edit-number", id)),
-    type: valueFromEditInput("edit-type", id),
-    status: valueFromEditInput("edit-status", id)
-  };
-
-  if (!isValidEntry(updated)) {
-    return;
-  }
-
-  const index = entries.findIndex((entry) => entry.id === id);
-  if (index === -1) {
-    return;
-  }
-
-  entries[index] = updated;
-  editingId = null;
-  persistEntries();
-  render();
+  // legacy – editing now handled via dialog form submit
 }
 
 function valueFromEditInput(prefix, id) {
-  const input = document.getElementById(`${prefix}-${id}`);
-  if (input instanceof HTMLInputElement || input instanceof HTMLSelectElement) {
-    return input.value.trim();
+  return getDialogValue(`${prefix}-${id}`);
+}
+
+function editEntry(id) {
+  const entry = entries.find((e) => e.id === id);
+  if (!entry) return;
+  editingId = id;
+  setDialogValue("dialog-edit-game", entry.game);
+  setDialogValue("dialog-edit-faction", entry.faction);
+  setDialogValue("dialog-edit-unit", entry.unit);
+  setDialogValue("dialog-edit-number", String(entry.number));
+  setDialogValue("dialog-edit-type", entry.type);
+  setDialogValue("dialog-edit-status", entry.status);
+  if (editEntryDialog instanceof HTMLDialogElement) editEntryDialog.showModal();
+}
+
+function setDialogValue(id, value) {
+  const el = document.getElementById(id);
+  if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement) {
+    el.value = value;
   }
-  return "";
+}
+
+function getDialogValue(id) {
+  const el = document.getElementById(id);
+  return (el instanceof HTMLInputElement || el instanceof HTMLSelectElement) ? el.value.trim() : "";
 }
 
 function getVisibleEntries() {
@@ -386,28 +410,6 @@ function renderSummary() {
   if (statPercent) {
     statPercent.textContent = `${completionPct}%`;
   }
-}
-
-function buildEditRow(entry) {
-  return `
-    <td><input class="inline-input" id="edit-game-${entry.id}" value="${escapeHtml(entry.game)}"></td>
-    <td><input class="inline-input" id="edit-faction-${entry.id}" value="${escapeHtml(entry.faction)}"></td>
-    <td><input class="inline-input" id="edit-unit-${entry.id}" value="${escapeHtml(entry.unit)}"></td>
-    <td><input class="inline-input" id="edit-number-${entry.id}" type="number" min="1" value="${entry.number}"></td>
-    <td><input class="inline-input" id="edit-type-${entry.id}" value="${escapeHtml(entry.type)}"></td>
-    <td>
-      <select class="inline-select" id="edit-status-${entry.id}">
-        ${STATUS_VALUES.map((status) => `<option ${status === entry.status ? "selected" : ""}>${status}</option>`).join("")}
-      </select>
-    </td>
-    <td class="armies-cell">${getUnitCollectionsHtml(entry.id)}</td>
-    <td>
-      <div class="row-actions">
-        <button class="icon-btn save" data-action="save" data-id="${entry.id}" title="Save" aria-label="Save">&#10003;</button>
-        <button class="icon-btn cancel" data-action="cancel" data-id="${entry.id}" title="Cancel" aria-label="Cancel">&times;</button>
-      </div>
-    </td>
-  `;
 }
 
 function loadEntries() {
