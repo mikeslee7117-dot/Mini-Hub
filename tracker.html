@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Tracker</title>
+  <link rel="stylesheet" href="styles.css?v=20260330" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a href="index.html" class="site-brand" aria-label="Mini Hub dashboard">
+        <span class="site-brand-title">Mini Hub</span>
+        <span class="site-brand-subtitle">Mini tracking workspace</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="tracker.html" class="nav-link nav-link--active">Tracker</a>
+        <a href="armies.html" class="nav-link">Armies</a>
+        <a href="scenarios.html" class="nav-link">Scenarios</a>
+        <a href="painting.html" class="nav-link">Painting</a>
+      </nav>
+    </aside>
+
+    <main class="app">
+      <section class="tracker-banner" aria-label="Unit Tracker banner">
+        <div class="tracker-banner-content">
+          <h1>Mini Inventory & Paint Tracker</h1>
+          <p>Track your backlog and painting progress by unit.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Add Mini Unit</h2>
+        <form id="entry-form" class="grid-form">
+          <label>
+            Game
+            <input id="game" name="game" required />
+          </label>
+
+          <label>
+            Faction
+            <input id="faction" name="faction" required />
+          </label>
+
+          <label>
+            Unit
+            <input id="unit" name="unit" required />
+          </label>
+
+          <label>
+            Number
+            <input id="number" name="number" type="number" min="1" required />
+          </label>
+
+          <label>
+            Type
+            <input id="type" name="type" required />
+          </label>
+
+          <label>
+            Status
+            <select id="status" name="status" required>
+              <option>Unpainted</option>
+              <option>Primed</option>
+              <option>Painted</option>
+              <option>Based</option>
+              <option>Completed</option>
+            </select>
+          </label>
+
+          <button type="submit">Add Entry</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Current Inventory</h2>
+        <div class="summary" id="summary">
+          <article class="stat-card">
+            <p class="stat-label">Unit Entries</p>
+            <p class="stat-value" id="stat-units">0</p>
+          </article>
+          <article class="stat-card">
+            <p class="stat-label">Total Minis</p>
+            <p class="stat-value" id="stat-total">0</p>
+          </article>
+          <article class="stat-card">
+            <p class="stat-label">Completed Minis</p>
+            <p class="stat-value" id="stat-completed">0</p>
+          </article>
+          <article class="stat-card">
+            <p class="stat-label">Completion</p>
+            <p class="stat-value" id="stat-percent">0%</p>
+          </article>
+        </div>
+
+        <form id="filters-form" class="filters">
+          <label>
+            Search
+            <input
+              id="search"
+              name="search"
+              placeholder="Game, faction, unit, or type"
+              autocomplete="off"
+            />
+          </label>
+          <label>
+            Status Filter
+            <select id="status-filter" name="statusFilter">
+              <option value="All">All</option>
+              <option value="Unpainted">Unpainted</option>
+              <option value="Primed">Primed</option>
+              <option value="Painted">Painted</option>
+              <option value="Based">Based</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </label>
+          <label>
+            Sort By
+            <select id="sort-by" name="sortBy">
+              <option value="none">None</option>
+              <option value="game">Game</option>
+              <option value="faction">Faction</option>
+              <option value="unit">Unit</option>
+              <option value="number">Number</option>
+              <option value="type">Type</option>
+              <option value="status">Status</option>
+            </select>
+          </label>
+          <label>
+            Direction
+            <select id="sort-dir" name="sortDirection">
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
+          </label>
+          <button type="button" id="clear-filters">Clear Filters</button>
+        </form>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>
+                  <button class="sort-btn" type="button" data-sort="game">
+                    <span>Game</span>
+                    <span class="sort-indicator" aria-hidden="true"></span>
+                  </button>
+                </th>
+                <th>
+                  <button class="sort-btn" type="button" data-sort="faction">
+                    <span>Faction</span>
+                    <span class="sort-indicator" aria-hidden="true"></span>
+                  </button>
+                </th>
+                <th>
+                  <button class="sort-btn" type="button" data-sort="unit">
+                    <span>Unit</span>
+                    <span class="sort-indicator" aria-hidden="true"></span>
+                  </button>
+                </th>
+                <th>
+                  <button class="sort-btn" type="button" data-sort="number">
+                    <span>Number</span>
+                    <span class="sort-indicator" aria-hidden="true"></span>
+                  </button>
+                </th>
+                <th>
+                  <button class="sort-btn" type="button" data-sort="type">
+                    <span>Type</span>
+                    <span class="sort-indicator" aria-hidden="true"></span>
+                  </button>
+                </th>
+                <th>
+                  <button class="sort-btn" type="button" data-sort="status">
+                    <span>Status</span>
+                    <span class="sort-indicator" aria-hidden="true"></span>
+                  </button>
+                </th>
+                <th>Armies / Scenarios</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="entries-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="cloud-sync.js"></script>
+  <script src="ui.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

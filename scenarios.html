@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scenarios — Mini Tracker</title>
+  <link rel="stylesheet" href="styles.css?v=20260330" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a href="index.html" class="site-brand" aria-label="Mini Hub dashboard">
+        <span class="site-brand-title">Mini Hub</span>
+        <span class="site-brand-subtitle">Mini tracking workspace</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="tracker.html" class="nav-link">Tracker</a>
+        <a href="armies.html" class="nav-link">Armies</a>
+        <a href="scenarios.html" class="nav-link nav-link--active">Scenarios</a>
+        <a href="painting.html" class="nav-link">Painting</a>
+      </nav>
+    </aside>
+
+    <main class="app">
+      <section class="page-banner scenarios-banner" aria-label="Scenarios banner">
+        <div class="page-banner-content">
+          <h1>Scenarios</h1>
+          <p>Match your owned minis against scenario requirements.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Create Scenario</h2>
+        <form id="create-scenario-form" class="create-form scenario-create-form">
+          <label>
+            Scenario Name
+            <input id="scenario-name" name="scenarioName" required placeholder="e.g. Hold the Bridge" />
+          </label>
+          <label class="scenario-game-field">
+            Game
+            <select id="scenario-game" name="scenarioGame" required>
+              <option value="">Select a game</option>
+            </select>
+          </label>
+          <button type="submit">Create Scenario</button>
+        </form>
+        <p class="small-note">Add requirements to each scenario, then assign owned minis to see whether you can cover the unit needs.</p>
+      </section>
+
+      <section>
+        <h2 class="scenarios-heading">Scenario Lists</h2>
+        <div id="scenarios-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="cloud-sync.js"></script>
+  <script src="ui.js"></script>
+  <script src="scenarios.js"></script>
+</body>
+</html>

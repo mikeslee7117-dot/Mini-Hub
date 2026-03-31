@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Armies — Mini Tracker</title>
+  <link rel="stylesheet" href="styles.css?v=20260330" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a href="index.html" class="site-brand" aria-label="Mini Hub dashboard">
+        <span class="site-brand-title">Mini Hub</span>
+        <span class="site-brand-subtitle">Mini tracking workspace</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="tracker.html" class="nav-link">Tracker</a>
+        <a href="armies.html" class="nav-link nav-link--active">Armies</a>
+        <a href="scenarios.html" class="nav-link">Scenarios</a>
+        <a href="painting.html" class="nav-link">Painting</a>
+      </nav>
+    </aside>
+
+    <main class="app">
+      <section class="page-banner armies-banner" aria-label="Army Lists banner">
+        <div class="page-banner-content">
+          <h1>Army Lists</h1>
+          <p>Organize your minis into named armies.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Create Army</h2>
+        <form id="create-army-form" class="create-form army-create-form">
+          <label>
+            Army Name
+            <input id="army-name" name="armyName" required placeholder="e.g. Tournament List 2026" />
+          </label>
+          <label class="army-game-field">
+            Game
+            <select id="army-game" name="armyGame" required>
+              <option value="">Select a game</option>
+            </select>
+          </label>
+          <button type="submit">Create Army</button>
+        </form>
+      </section>
+
+      <section>
+        <h2 class="armies-heading">Your Armies</h2>
+        <div id="armies-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="cloud-sync.js"></script>
+  <script src="ui.js"></script>
+  <script src="armies.js"></script>
+</body>
+</html>

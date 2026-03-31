@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recovery — Mini Hub</title>
+  <link rel="stylesheet" href="styles.css?v=20260330" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a href="index.html" class="site-brand" aria-label="Mini Hub dashboard">
+        <span class="site-brand-title">Mini Hub</span>
+        <span class="site-brand-subtitle">Mini tracking workspace</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="tracker.html" class="nav-link">Tracker</a>
+        <a href="armies.html" class="nav-link">Armies</a>
+        <a href="scenarios.html" class="nav-link">Scenarios</a>
+        <a href="painting.html" class="nav-link">Painting</a>
+        <a href="recovery.html" class="nav-link nav-link--active">Recovery</a>
+      </nav>
+    </aside>
+
+    <main class="app">
+      <section class="panel">
+        <p class="eyebrow">Storage recovery</p>
+        <h1>Recovery</h1>
+        <p class="small-note">This app stores data in browser localStorage. If records seem missing, they are often still present under a different origin such as <strong>file://</strong>, <strong>http://localhost:5500</strong>, or <strong>http://127.0.0.1:5500</strong>.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Current Origin</h2>
+        <p id="recovery-origin" class="recovery-origin">Unknown</p>
+        <div class="row-actions">
+          <button id="refresh-recovery" type="button">Refresh Snapshot</button>
+          <button id="export-recovery" type="button">Export Current Data</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Stored Keys</h2>
+        <div id="recovery-summary" class="dashboard-list"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Import Snapshot</h2>
+        <p class="small-note">Paste a JSON export created by this recovery page, then import it into the current origin.</p>
+        <label>
+          Snapshot JSON
+          <textarea id="recovery-import-input" class="recovery-textarea" spellcheck="false"></textarea>
+        </label>
+        <div class="row-actions">
+          <button id="import-recovery" type="button">Import Snapshot</button>
+        </div>
+        <p id="recovery-message" class="small-note"></p>
+      </section>
+    </main>
+  </div>
+
+  <script src="cloud-sync.js"></script>
+  <script src="recovery.js"></script>
+</body>
+</html>

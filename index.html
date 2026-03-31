@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Mini Hub</title>
+  <link rel="stylesheet" href="styles.css?v=20260330" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a href="index.html" class="site-brand" aria-label="Mini Hub dashboard">
+        <span class="site-brand-title">Mini Hub</span>
+        <span class="site-brand-subtitle">Mini tracking workspace</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="index.html" class="nav-link nav-link--active">Dashboard</a>
+        <a href="tracker.html" class="nav-link">Tracker</a>
+        <a href="armies.html" class="nav-link">Armies</a>
+        <a href="scenarios.html" class="nav-link">Scenarios</a>
+        <a href="painting.html" class="nav-link">Painting</a>
+      </nav>
+    </aside>
+
+    <main class="app">
+      <section class="panel dashboard-hero">
+        <p class="eyebrow">Campaign overview</p>
+        <h1>Dashboard</h1>
+        <p>Track overall collection progress, army composition, scenario readiness, and painting workload in one place.</p>
+      </section>
+
+      <section class="summary dashboard-summary" aria-label="Dashboard overview metrics">
+        <article class="stat-card">
+          <p class="stat-label">Total Minis</p>
+          <p class="stat-value" id="metric-total-minis">0</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Completion</p>
+          <p class="stat-value" id="metric-completion">0%</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Armies</p>
+          <p class="stat-value" id="metric-armies">0</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Scenario Coverage</p>
+          <p class="stat-value" id="metric-scenario-coverage">0%</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Paint Inventory</p>
+          <p class="stat-value" id="metric-paints">0</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Tracked Units</p>
+          <p class="stat-value" id="metric-units">0</p>
+        </article>
+      </section>
+
+      <section class="dashboard-grid">
+        <section class="panel">
+          <div class="dashboard-panel-title">
+            <div>
+              <h2>Inventory Status</h2>
+              <p>Mini counts grouped by painting stage.</p>
+            </div>
+          </div>
+          <div class="dashboard-inline-stats">
+            <article class="dashboard-inline-card">
+              <strong id="metric-unpainted">0</strong>
+              <span>Unpainted minis</span>
+            </article>
+            <article class="dashboard-inline-card">
+              <strong id="metric-active-work">0</strong>
+              <span>In-progress minis</span>
+            </article>
+            <article class="dashboard-inline-card">
+              <strong id="metric-completed-minis">0</strong>
+              <span>Completed minis</span>
+            </article>
+          </div>
+          <div id="status-breakdown" class="dashboard-status-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="dashboard-panel-title">
+            <div>
+              <h2>Games Snapshot</h2>
+              <p>Where your collection and planning are concentrated.</p>
+            </div>
+          </div>
+          <div id="games-breakdown" class="dashboard-list"></div>
+        </section>
+      </section>
+
+      <section class="dashboard-grid">
+        <section class="panel">
+          <div class="dashboard-panel-title">
+            <div>
+              <h2>Armies</h2>
+              <p>Army list count and assignment density.</p>
+            </div>
+          </div>
+          <div class="dashboard-inline-stats">
+            <article class="dashboard-inline-card">
+              <strong id="metric-army-assigned">0</strong>
+              <span>Minis assigned to armies</span>
+            </article>
+            <article class="dashboard-inline-card">
+              <strong id="metric-largest-army">0</strong>
+              <span>Largest army size</span>
+            </article>
+            <article class="dashboard-inline-card">
+              <strong id="metric-average-army">0</strong>
+              <span>Average army size</span>
+            </article>
+          </div>
+          <div id="army-breakdown" class="dashboard-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="dashboard-panel-title">
+            <div>
+              <h2>Scenarios</h2>
+              <p>Requirement coverage and shortfall across scenario pages.</p>
+            </div>
+          </div>
+          <div class="dashboard-inline-stats">
+            <article class="dashboard-inline-card">
+              <strong id="metric-requirements">0</strong>
+              <span>Total requirements</span>
+            </article>
+            <article class="dashboard-inline-card">
+              <strong id="metric-covered">0</strong>
+              <span>Covered requirements</span>
+            </article>
+            <article class="dashboard-inline-card">
+              <strong id="metric-shortfall">0</strong>
+              <span>Shortfall minis</span>
+            </article>
+          </div>
+          <div id="scenario-breakdown" class="dashboard-list"></div>
+        </section>
+      </section>
+
+      <section class="dashboard-grid">
+        <section class="panel">
+          <div class="dashboard-panel-title">
+            <div>
+              <h2>Painting</h2>
+              <p>Inventory depth and unit paint planning.</p>
+            </div>
+          </div>
+          <div class="dashboard-inline-stats">
+            <article class="dashboard-inline-card">
+              <strong id="metric-planned-units">0</strong>
+              <span>Units with paint plans</span>
+            </article>
+            <article class="dashboard-inline-card">
+              <strong id="metric-paint-assignments">0</strong>
+              <span>Paint assignments</span>
+            </article>
+            <article class="dashboard-inline-card">
+              <strong id="metric-paint-brands">0</strong>
+              <span>Brands in stash</span>
+            </article>
+          </div>
+          <div id="painting-breakdown" class="dashboard-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="dashboard-panel-title">
+            <div>
+              <h2>Focus Queue</h2>
+              <p>Units that still need the most attention.</p>
+            </div>
+          </div>
+          <div id="focus-queue" class="dashboard-focus-list"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="cloud-sync.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

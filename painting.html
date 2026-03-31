@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painting — Mini Tracker</title>
+  <link rel="stylesheet" href="styles.css?v=20260330" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a href="index.html" class="site-brand" aria-label="Mini Hub dashboard">
+        <span class="site-brand-title">Mini Hub</span>
+        <span class="site-brand-subtitle">Mini tracking workspace</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="tracker.html" class="nav-link">Tracker</a>
+        <a href="armies.html" class="nav-link">Armies</a>
+        <a href="scenarios.html" class="nav-link">Scenarios</a>
+        <a href="painting.html" class="nav-link nav-link--active">Painting</a>
+      </nav>
+    </aside>
+
+    <main class="app">
+      <section class="page-banner painting-banner" aria-label="Painting banner">
+        <div class="page-banner-content">
+          <h1>Painting</h1>
+          <p>Track your paint inventory and paints used per unit.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Paint Inventory</h2>
+        <form id="paint-form" class="paint-form">
+          <label>
+            Name
+            <input id="paint-name" name="name" required placeholder="e.g. Abaddon Black" />
+          </label>
+          <label>
+            Type
+            <input id="paint-type" name="type" required placeholder="e.g. Base" />
+          </label>
+          <label>
+            Brand
+            <input id="paint-brand" name="brand" required placeholder="e.g. Citadel" />
+          </label>
+          <button type="submit">Add Paint</button>
+        </form>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Brand</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="paints-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Unit Paint Assignments</h2>
+        <form id="paint-unit-form" class="paint-unit-form">
+          <label>
+            Unit
+            <select id="paint-unit-select" name="entryId" required>
+              <option value="">Select a unit</option>
+            </select>
+          </label>
+          <button type="submit">Add Unit</button>
+        </form>
+        <p class="small-note">Add a unit, then use Edit on that row to assign paints and areas.</p>
+        <div id="paint-plans"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="cloud-sync.js"></script>
+  <script src="ui.js"></script>
+  <script src="painting.js"></script>
+</body>
+</html>
