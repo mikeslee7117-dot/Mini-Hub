@@ -45,6 +45,7 @@ function initUiHelpers() {
   wireGlobalDialogCloses();
 
   window.appToast = showToast;
+  window.appConfirmDelete = confirmDelete;
 }
 
 function bindGlobalToasts() {
@@ -138,6 +139,11 @@ function showToast(message) {
       toast.remove();
     }, 180);
   }, TOAST_DURATION_MS);
+}
+
+function confirmDelete(label) {
+  const target = String(label || "item").trim() || "item";
+  return window.confirm(`Delete ${target}?`);
 }
 
 function wireGlobalDialogCloses() {

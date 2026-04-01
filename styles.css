@@ -748,6 +748,16 @@ td:last-child {
 .assignment-list {
   display: grid;
   gap: 0.35rem;
+  align-content: start;
+}
+
+.scenario-requirements-table td {
+  vertical-align: top;
+}
+
+.scenario-requirements-table .row-actions {
+  flex-wrap: nowrap;
+  align-items: center;
 }
 
 .assignment-row {

@@ -10,10 +10,10 @@ const STATUS_VALUES = ["Unpainted", "Primed", "Painted", "Based", "Completed"];
 const form = document.getElementById("entry-form");
 const entriesBody = document.getElementById("entries-body");
 const tableHead = document.querySelector("thead");
-const searchInput = document.getElementById("search");
-const statusFilterInput = document.getElementById("status-filter");
-const sortByInput = document.getElementById("sort-by");
-const sortDirInput = document.getElementById("sort-dir");
+const filterGameInput = document.getElementById("filter-game");
+const filterFactionInput = document.getElementById("filter-faction");
+const filterUnitInput = document.getElementById("filter-unit");
+const filterStatusInput = document.getElementById("filter-status");
 const clearFiltersButton = document.getElementById("clear-filters");
 const statUnits = document.getElementById("stat-units");
 const statTotal = document.getElementById("stat-total");
@@ -28,7 +28,9 @@ let entries = loadEntries();
 let armies = loadArmiesData();
 let scenarios = loadScenariosData();
 let filters = {
-  search: "",
+  game: "",
+  faction: "",
+  unit: "",
   status: "All",
   sortBy: "none",
   sortDir: "asc"
@@ -150,32 +152,30 @@ if (tableHead instanceof HTMLTableSectionElement) {
   });
 }
 
-if (searchInput instanceof HTMLInputElement) {
-  searchInput.addEventListener("input", () => {
-    filters.search = searchInput.value.trim().toLowerCase();
+if (filterGameInput instanceof HTMLInputElement) {
+  filterGameInput.addEventListener("input", () => {
+    filters.game = filterGameInput.value.trim().toLowerCase();
     render();
   });
 }
 
-if (statusFilterInput instanceof HTMLSelectElement) {
-  statusFilterInput.addEventListener("change", () => {
-    filters.status = statusFilterInput.value;
+if (filterFactionInput instanceof HTMLInputElement) {
+  filterFactionInput.addEventListener("input", () => {
+    filters.faction = filterFactionInput.value.trim().toLowerCase();
     render();
   });
 }
 
-if (sortByInput instanceof HTMLSelectElement) {
-  sortByInput.addEventListener("change", () => {
-    filters.sortBy = sortByInput.value;
-    syncSortControls();
+if (filterUnitInput instanceof HTMLInputElement) {
+  filterUnitInput.addEventListener("input", () => {
+    filters.unit = filterUnitInput.value.trim().toLowerCase();
     render();
   });
 }
 
-if (sortDirInput instanceof HTMLSelectElement) {
-  sortDirInput.addEventListener("change", () => {
-    filters.sortDir = sortDirInput.value;
-    syncSortControls();
+if (filterStatusInput instanceof HTMLSelectElement) {
+  filterStatusInput.addEventListener("change", () => {
+    filters.status = filterStatusInput.value;
     render();
   });
 }
@@ -183,20 +183,27 @@ if (sortDirInput instanceof HTMLSelectElement) {
 if (clearFiltersButton instanceof HTMLButtonElement) {
   clearFiltersButton.addEventListener("click", () => {
     filters = {
-      search: "",
+      game: "",
+      faction: "",
+      unit: "",
       status: "All",
       sortBy: "none",
       sortDir: "asc"
     };
 
-    if (searchInput instanceof HTMLInputElement) {
-      searchInput.value = "";
+    if (filterGameInput instanceof HTMLInputElement) {
+      filterGameInput.value = "";
     }
-    if (statusFilterInput instanceof HTMLSelectElement) {
-      statusFilterInput.value = "All";
+    if (filterFactionInput instanceof HTMLInputElement) {
+      filterFactionInput.value = "";
+    }
+    if (filterUnitInput instanceof HTMLInputElement) {
+      filterUnitInput.value = "";
+    }
+    if (filterStatusInput instanceof HTMLSelectElement) {
+      filterStatusInput.value = "All";
     }
 
-    syncSortControls();
     render();
   });
 }
@@ -254,12 +261,7 @@ function render() {
 }
 
 function syncSortControls() {
-  if (sortByInput instanceof HTMLSelectElement) {
-    sortByInput.value = filters.sortBy;
-  }
-  if (sortDirInput instanceof HTMLSelectElement) {
-    sortDirInput.value = filters.sortDir;
-  }
+  // Tracker sort is controlled by column headers.
 }
 
 function renderSortHeaders() {
@@ -281,6 +283,18 @@ function renderSortHeaders() {
 }
 
 function removeEntry(id) {
+  const entry = entries.find((item) => item.id === id);
+  if (!entry) {
+    return;
+  }
+
+  const ask = typeof window.appConfirmDelete === "function"
+    ? window.appConfirmDelete
+    : (label) => window.confirm(`Delete ${label}?`);
+  if (!ask(entry.unit || "entry")) {
+    return;
+  }
+
   if (editingId === id) {
     editingId = null;
   }
@@ -351,20 +365,24 @@ function getDialogValue(id) {
 
 function getVisibleEntries() {
   const filtered = entries.filter((entry) => {
+    if (filters.game && !entry.game.toLowerCase().includes(filters.game)) {
+      return false;
+    }
+
+    if (filters.faction && !entry.faction.toLowerCase().includes(filters.faction)) {
+      return false;
+    }
+
+    if (filters.unit && !entry.unit.toLowerCase().includes(filters.unit)) {
+      return false;
+    }
+
     const statusMatch = filters.status === "All" || entry.status === filters.status;
     if (!statusMatch) {
       return false;
     }
 
-    if (!filters.search) {
-      return true;
-    }
-
-    const haystack = [entry.game, entry.faction, entry.unit, entry.type]
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(filters.search);
+    return true;
   });
 
   if (filters.sortBy === "none") {

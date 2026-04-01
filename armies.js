@@ -15,6 +15,7 @@ const armyPickerDialogSelect = document.getElementById("army-picker-dialog-selec
 const armyPickerDialogAddBtn = document.getElementById("army-picker-dialog-add-btn");
 const editArmyDialog = document.getElementById("edit-army-dialog");
 const editArmyDialogName = document.getElementById("edit-army-dialog-name");
+const editArmyDialogGame = document.getElementById("edit-army-dialog-game");
 const editArmyDialogSaveBtn = document.getElementById("edit-army-dialog-save-btn");
 
 let armies = loadArmies();
@@ -43,14 +44,16 @@ if (armyPickerDialogAddBtn instanceof HTMLButtonElement) {
 
 if (editArmyDialogSaveBtn instanceof HTMLButtonElement) {
   editArmyDialogSaveBtn.addEventListener("click", () => {
-    if (!(editArmyDialog instanceof HTMLDialogElement) || !(editArmyDialogName instanceof HTMLInputElement)) return;
+    if (!(editArmyDialog instanceof HTMLDialogElement) || !(editArmyDialogName instanceof HTMLInputElement) || !(editArmyDialogGame instanceof HTMLSelectElement)) return;
     const armyId = editArmyDialog.dataset.armyId;
     if (!armyId) return;
     const name = editArmyDialogName.value.trim();
-    if (!name) return;
+    const game = editArmyDialogGame.value.trim();
+    if (!name || !game) return;
     const army = armies.find((a) => a.id === armyId);
     if (army) {
       army.name = name;
+      army.game = game;
       persistArmies();
       render();
     }
@@ -210,11 +213,17 @@ function refreshArmyPickerDialog(armyId) {
 }
 
 function openEditArmyDialog(armyId) {
-  if (!(editArmyDialog instanceof HTMLDialogElement) || !(editArmyDialogName instanceof HTMLInputElement)) return;
+  if (!(editArmyDialog instanceof HTMLDialogElement) || !(editArmyDialogName instanceof HTMLInputElement) || !(editArmyDialogGame instanceof HTMLSelectElement)) return;
   const army = armies.find((a) => a.id === armyId);
   if (!army) return;
   editArmyDialog.dataset.armyId = armyId;
   editArmyDialogName.value = army.name;
+  const games = [...new Set(entries.map((entry) => entry.game).filter((game) => game))]
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  editArmyDialogGame.innerHTML = `${games.length > 0 ? '<option value="">Select a game</option>' : '<option value="">No games in tracker yet</option>'}${games
+    .map((game) => `<option value="${escapeHtml(game)}">${escapeHtml(game)}</option>`)
+    .join("")}`;
+  editArmyDialogGame.value = games.includes(army.game) ? army.game : "";
   editArmyDialog.showModal();
 }
 
@@ -263,6 +272,17 @@ function buildQuantityControl(armyId, unitId, currentQuantity, maxQuantity) {
 }
 
 function deleteArmy(id) {
+  const army = armies.find((item) => item.id === id);
+  if (!army) {
+    return;
+  }
+  const ask = typeof window.appConfirmDelete === "function"
+    ? window.appConfirmDelete
+    : (label) => window.confirm(`Delete ${label}?`);
+  if (!ask(army.name || "army")) {
+    return;
+  }
+
   armies = armies.filter((army) => army.id !== id);
   expandedArmyIds.delete(id);
   persistArmies();
@@ -292,6 +312,14 @@ function addUnitToArmy(armyId, unitId) {
 function removeUnitFromArmy(armyId, unitId) {
   const army = armies.find((item) => item.id === armyId);
   if (!army) {
+    return;
+  }
+
+  const entry = entries.find((item) => item.id === unitId);
+  const ask = typeof window.appConfirmDelete === "function"
+    ? window.appConfirmDelete
+    : (label) => window.confirm(`Delete ${label}?`);
+  if (!ask(entry && entry.unit ? entry.unit : "unit")) {
     return;
   }
 

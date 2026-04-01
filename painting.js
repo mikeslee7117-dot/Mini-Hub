@@ -514,6 +514,17 @@ function buildAssignmentRow(planId, assignment) {
 }
 
 function deletePaint(paintId) {
+  const paint = paints.find((item) => item.id === paintId);
+  if (!paint) {
+    return;
+  }
+  const ask = typeof window.appConfirmDelete === "function"
+    ? window.appConfirmDelete
+    : (label) => window.confirm(`Delete ${label}?`);
+  if (!ask(paint.name || "paint")) {
+    return;
+  }
+
   paints = paints.filter((paint) => paint.id !== paintId);
   for (const plan of paintPlans) {
     plan.assignments = plan.assignments.filter((assignment) => assignment.paintId !== paintId);
@@ -525,6 +536,18 @@ function deletePaint(paintId) {
 }
 
 function deletePlan(planId) {
+  const plan = paintPlans.find((item) => item.id === planId);
+  if (!plan) {
+    return;
+  }
+  const entry = entries.find((item) => item.id === plan.entryId);
+  const ask = typeof window.appConfirmDelete === "function"
+    ? window.appConfirmDelete
+    : (label) => window.confirm(`Delete ${label}?`);
+  if (!ask(entry && entry.unit ? entry.unit : "unit")) {
+    return;
+  }
+
   paintPlans = paintPlans.filter((plan) => plan.id !== planId);
   persistPaintPlans();
   render();
@@ -565,6 +588,15 @@ function buildAssignmentAddRow(plan) {
 function deleteAssignment(planId, assignmentId) {
   const plan = paintPlans.find((item) => item.id === planId);
   if (!plan) {
+    return;
+  }
+
+  const assignment = plan.assignments.find((item) => item.id === assignmentId);
+  const paint = assignment ? paints.find((item) => item.id === assignment.paintId) : null;
+  const ask = typeof window.appConfirmDelete === "function"
+    ? window.appConfirmDelete
+    : (label) => window.confirm(`Delete ${label}?`);
+  if (!ask(paint && paint.name ? paint.name : "assignment")) {
     return;
   }
 

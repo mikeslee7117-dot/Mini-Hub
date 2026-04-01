@@ -284,8 +284,8 @@ function buildRequirementRow(scenario, requirement) {
       <td class="assignment-list">${buildAssignmentList(scenario, requirement)}</td>
       <td>
         <div class="row-actions">
+          <button class="btn-small" data-action="open-picker" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}">Assign</button>
           <button class="icon-btn" data-action="edit-requirement" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}" title="Edit" aria-label="Edit">&#9998;</button>
-          <button data-action="open-picker" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}">Assign</button>
           <button class="icon-btn delete" data-action="delete-requirement" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}" title="Delete" aria-label="Delete">&times;</button>
         </div>
       </td>
@@ -432,6 +432,17 @@ function buildAssignmentList(scenario, requirement) {
 }
 
 function deleteScenario(scenarioId) {
+  const scenario = getScenario(scenarioId);
+  if (!scenario) {
+    return;
+  }
+  const ask = typeof window.appConfirmDelete === "function"
+    ? window.appConfirmDelete
+    : (label) => window.confirm(`Delete ${label}?`);
+  if (!ask(scenario.name || "scenario")) {
+    return;
+  }
+
   scenarios = scenarios.filter((scenario) => scenario.id !== scenarioId);
   expandedScenarioIds.delete(scenarioId);
   persistScenarios();
@@ -450,6 +461,14 @@ function toggleScenarioCollapse(scenarioId) {
 function deleteRequirement(scenarioId, requirementId) {
   const scenario = scenarios.find((item) => item.id === scenarioId);
   if (!scenario) {
+    return;
+  }
+
+  const requirement = scenario.requirements.find((item) => item.id === requirementId);
+  const ask = typeof window.appConfirmDelete === "function"
+    ? window.appConfirmDelete
+    : (label) => window.confirm(`Delete ${label}?`);
+  if (!ask(requirement && requirement.unit ? requirement.unit : "requirement")) {
     return;
   }
 
@@ -480,6 +499,14 @@ function assignUnit(scenarioId, requirementId, unitId) {
 function removeAssignment(scenarioId, requirementId, unitId) {
   const requirement = getRequirement(scenarioId, requirementId);
   if (!requirement) {
+    return;
+  }
+
+  const entry = entries.find((item) => item.id === unitId);
+  const ask = typeof window.appConfirmDelete === "function"
+    ? window.appConfirmDelete
+    : (label) => window.confirm(`Delete ${label}?`);
+  if (!ask(entry && entry.unit ? entry.unit : "assignment")) {
     return;
   }
 

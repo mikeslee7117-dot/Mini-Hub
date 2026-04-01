@@ -4,14 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mini Tracker</title>
-  <link rel="stylesheet" href="styles.css?v=20260330" />
+  <link rel="stylesheet" href="styles.css?v=20260331" />
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
       <a href="index.html" class="site-brand" aria-label="Mini Hub dashboard">
         <span class="site-brand-title">Mini Hub</span>
-        <span class="site-brand-subtitle">Mini tracking workspace</span>
       </a>
 
       <details class="sidebar-menu">
@@ -35,50 +34,10 @@
       </section>
 
       <section class="panel">
-        <h2>Add Mini Unit</h2>
-        <form id="entry-form" class="grid-form">
-          <label>
-            Game
-            <input id="game" name="game" required />
-          </label>
-
-          <label>
-            Faction
-            <input id="faction" name="faction" required />
-          </label>
-
-          <label>
-            Unit
-            <input id="unit" name="unit" required />
-          </label>
-
-          <label>
-            Number
-            <input id="number" name="number" type="number" min="1" required />
-          </label>
-
-          <label>
-            Type
-            <input id="type" name="type" required />
-          </label>
-
-          <label>
-            Status
-            <select id="status" name="status" required>
-              <option>Unpainted</option>
-              <option>Primed</option>
-              <option>Painted</option>
-              <option>Based</option>
-              <option>Completed</option>
-            </select>
-          </label>
-
-          <button type="submit">Add Entry</button>
-        </form>
-      </section>
-
-      <section class="panel">
-        <h2>Current Inventory</h2>
+        <div class="section-toolbar">
+          <h2>Current Inventory</h2>
+          <button id="open-add-entry-btn" type="button">Add Entry</button>
+        </div>
         <div class="summary" id="summary">
           <article class="stat-card">
             <p class="stat-label">Unit Entries</p>
@@ -100,42 +59,26 @@
 
         <form id="filters-form" class="filters">
           <label>
-            Search
-            <input
-              id="search"
-              name="search"
-              placeholder="Game, faction, unit, or type"
-              autocomplete="off"
-            />
+            Game
+            <input id="filter-game" name="game" autocomplete="off" />
           </label>
           <label>
-            Status Filter
-            <select id="status-filter" name="statusFilter">
+            Faction
+            <input id="filter-faction" name="faction" autocomplete="off" />
+          </label>
+          <label>
+            Unit
+            <input id="filter-unit" name="unit" autocomplete="off" />
+          </label>
+          <label>
+            Status
+            <select id="filter-status" name="status">
               <option value="All">All</option>
               <option value="Unpainted">Unpainted</option>
               <option value="Primed">Primed</option>
               <option value="Painted">Painted</option>
               <option value="Based">Based</option>
               <option value="Completed">Completed</option>
-            </select>
-          </label>
-          <label>
-            Sort By
-            <select id="sort-by" name="sortBy">
-              <option value="none">None</option>
-              <option value="game">Game</option>
-              <option value="faction">Faction</option>
-              <option value="unit">Unit</option>
-              <option value="number">Number</option>
-              <option value="type">Type</option>
-              <option value="status">Status</option>
-            </select>
-          </label>
-          <label>
-            Direction
-            <select id="sort-dir" name="sortDirection">
-              <option value="asc">Ascending</option>
-              <option value="desc">Descending</option>
             </select>
           </label>
           <button type="button" id="clear-filters">Clear Filters</button>
@@ -191,6 +134,92 @@
       </section>
     </main>
   </div>
+
+  <dialog id="add-entry-dialog">
+    <div class="dialog-header">
+      <h2>Add Entry</h2>
+      <button class="dialog-close-btn" type="button" data-close-dialog="add-entry-dialog" aria-label="Close">&times;</button>
+    </div>
+    <form id="entry-form" class="dialog-form grid-form">
+      <label>
+        Game
+        <input id="game" name="game" required />
+      </label>
+      <label>
+        Faction
+        <input id="faction" name="faction" required />
+      </label>
+      <label>
+        Unit
+        <input id="unit" name="unit" required />
+      </label>
+      <label>
+        Number
+        <input id="number" name="number" type="number" min="1" required />
+      </label>
+      <label>
+        Type
+        <input id="type" name="type" required />
+      </label>
+      <label>
+        Status
+        <select id="status" name="status" required>
+          <option>Unpainted</option>
+          <option>Primed</option>
+          <option>Painted</option>
+          <option>Based</option>
+          <option>Completed</option>
+        </select>
+      </label>
+      <div class="dialog-footer">
+        <button type="button" data-close-dialog="add-entry-dialog" class="btn-secondary">Cancel</button>
+        <button type="submit">Add Entry</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="edit-entry-dialog">
+    <div class="dialog-header">
+      <h2>Edit Entry</h2>
+      <button class="dialog-close-btn" type="button" data-close-dialog="edit-entry-dialog" aria-label="Close">&times;</button>
+    </div>
+    <form id="edit-entry-form" class="dialog-form grid-form">
+      <label>
+        Game
+        <input id="dialog-edit-game" required />
+      </label>
+      <label>
+        Faction
+        <input id="dialog-edit-faction" required />
+      </label>
+      <label>
+        Unit
+        <input id="dialog-edit-unit" required />
+      </label>
+      <label>
+        Number
+        <input id="dialog-edit-number" type="number" min="1" required />
+      </label>
+      <label>
+        Type
+        <input id="dialog-edit-type" required />
+      </label>
+      <label>
+        Status
+        <select id="dialog-edit-status" required>
+          <option>Unpainted</option>
+          <option>Primed</option>
+          <option>Painted</option>
+          <option>Based</option>
+          <option>Completed</option>
+        </select>
+      </label>
+      <div class="dialog-footer">
+        <button type="button" data-close-dialog="edit-entry-dialog" class="btn-secondary">Cancel</button>
+        <button type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
 
   <script src="cloud-sync.js"></script>
   <script src="ui.js"></script>
