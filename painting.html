@@ -40,8 +40,8 @@
         </div>
         <form id="paint-filters-form" class="filters paint-filters">
           <label>Search<input id="paint-filter-search" name="paintSearch" placeholder="Name, type, or brand" autocomplete="off" /></label>
-          <label>Type<select id="paint-filter-type"><option value="">All Types</option></select></label>
-          <label>Brand<select id="paint-filter-brand"><option value="">All Brands</option></select></label>
+          <label>Type<select id="paint-filter-type"><option value="all">All Types</option></select></label>
+          <label>Brand<select id="paint-filter-brand"><option value="all">All Brands</option></select></label>
           <button type="button" id="paint-filter-clear">Clear</button>
         </form>
         <div class="table-wrap">
@@ -113,9 +113,9 @@
       <button class="dialog-close-btn" type="button" data-close-dialog="edit-paint-dialog" aria-label="Close">&times;</button>
     </div>
     <form id="edit-paint-form" class="dialog-form">
-      <label>Name<input id="edit-paint-dialog-name" required /></label>
-      <label>Type<input id="edit-paint-dialog-type" required /></label>
-      <label>Brand<input id="edit-paint-dialog-brand" required /></label>
+      <label>Name<input id="edit-paint-dialog-name" name="name" required /></label>
+      <label>Type<input id="edit-paint-dialog-type" name="type" required /></label>
+      <label>Brand<input id="edit-paint-dialog-brand" name="brand" required /></label>
       <div class="dialog-footer">
         <button type="button" data-close-dialog="edit-paint-dialog" class="btn-secondary">Cancel</button>
         <button type="submit">Save</button>

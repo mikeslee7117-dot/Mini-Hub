@@ -28,9 +28,9 @@ let entries = loadEntries();
 let armies = loadArmiesData();
 let scenarios = loadScenariosData();
 let filters = {
-  game: "",
-  faction: "",
-  unit: "",
+  game: "All",
+  faction: "All",
+  unit: "All",
   status: "All",
   sortBy: "none",
   sortDir: "asc"
@@ -152,23 +152,23 @@ if (tableHead instanceof HTMLTableSectionElement) {
   });
 }
 
-if (filterGameInput instanceof HTMLInputElement) {
-  filterGameInput.addEventListener("input", () => {
-    filters.game = filterGameInput.value.trim().toLowerCase();
+if (filterGameInput instanceof HTMLSelectElement) {
+  filterGameInput.addEventListener("change", () => {
+    filters.game = filterGameInput.value;
     render();
   });
 }
 
-if (filterFactionInput instanceof HTMLInputElement) {
-  filterFactionInput.addEventListener("input", () => {
-    filters.faction = filterFactionInput.value.trim().toLowerCase();
+if (filterFactionInput instanceof HTMLSelectElement) {
+  filterFactionInput.addEventListener("change", () => {
+    filters.faction = filterFactionInput.value;
     render();
   });
 }
 
-if (filterUnitInput instanceof HTMLInputElement) {
-  filterUnitInput.addEventListener("input", () => {
-    filters.unit = filterUnitInput.value.trim().toLowerCase();
+if (filterUnitInput instanceof HTMLSelectElement) {
+  filterUnitInput.addEventListener("change", () => {
+    filters.unit = filterUnitInput.value;
     render();
   });
 }
@@ -183,22 +183,22 @@ if (filterStatusInput instanceof HTMLSelectElement) {
 if (clearFiltersButton instanceof HTMLButtonElement) {
   clearFiltersButton.addEventListener("click", () => {
     filters = {
-      game: "",
-      faction: "",
-      unit: "",
+      game: "All",
+      faction: "All",
+      unit: "All",
       status: "All",
       sortBy: "none",
       sortDir: "asc"
     };
 
-    if (filterGameInput instanceof HTMLInputElement) {
-      filterGameInput.value = "";
+    if (filterGameInput instanceof HTMLSelectElement) {
+      filterGameInput.value = "All";
     }
-    if (filterFactionInput instanceof HTMLInputElement) {
-      filterFactionInput.value = "";
+    if (filterFactionInput instanceof HTMLSelectElement) {
+      filterFactionInput.value = "All";
     }
-    if (filterUnitInput instanceof HTMLInputElement) {
-      filterUnitInput.value = "";
+    if (filterUnitInput instanceof HTMLSelectElement) {
+      filterUnitInput.value = "All";
     }
     if (filterStatusInput instanceof HTMLSelectElement) {
       filterStatusInput.value = "All";
@@ -218,6 +218,7 @@ function render() {
   entriesBody.innerHTML = "";
   armies = loadArmiesData();
   scenarios = loadScenariosData();
+  populateFilterOptions();
   renderSummary();
   renderSortHeaders();
 
@@ -365,15 +366,15 @@ function getDialogValue(id) {
 
 function getVisibleEntries() {
   const filtered = entries.filter((entry) => {
-    if (filters.game && !entry.game.toLowerCase().includes(filters.game)) {
+    if (filters.game !== "All" && entry.game !== filters.game) {
       return false;
     }
 
-    if (filters.faction && !entry.faction.toLowerCase().includes(filters.faction)) {
+    if (filters.faction !== "All" && entry.faction !== filters.faction) {
       return false;
     }
 
-    if (filters.unit && !entry.unit.toLowerCase().includes(filters.unit)) {
+    if (filters.unit !== "All" && entry.unit !== filters.unit) {
       return false;
     }
 
@@ -390,6 +391,32 @@ function getVisibleEntries() {
   }
 
   return [...filtered].sort((a, b) => compareEntries(a, b, filters.sortBy, filters.sortDir));
+}
+
+function populateFilterOptions() {
+  const games = [...new Set(entries.map((entry) => entry.game).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  const factions = [...new Set(entries.map((entry) => entry.faction).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  const units = [...new Set(entries.map((entry) => entry.unit).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+
+  populateSingleFilter(filterGameInput, games, filters.game);
+  populateSingleFilter(filterFactionInput, factions, filters.faction);
+  populateSingleFilter(filterUnitInput, units, filters.unit);
+}
+
+function populateSingleFilter(select, values, selectedValue) {
+  if (!(select instanceof HTMLSelectElement)) {
+    return;
+  }
+
+  const options = values
+    .map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`)
+    .join("");
+  select.innerHTML = `<option value="All">All</option>${options}`;
+  const exists = selectedValue === "All" || values.includes(selectedValue);
+  select.value = exists ? selectedValue : "All";
 }
 
 function compareEntries(a, b, sortBy, sortDir) {

@@ -83,13 +83,10 @@ body {
 
 .tracker-banner {
   position: relative;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  background:
-    linear-gradient(135deg, rgba(56, 95, 77, 0.94), rgba(41, 69, 56, 0.88)),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent);
-  box-shadow: 0 8px 20px rgba(38, 60, 51, 0.14);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .tracker-banner-content {
@@ -98,9 +95,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  padding: 0.7rem 1rem;
-  color: #f8f6f1;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.24);
+  padding: 0;
+  color: var(--ink);
+  text-shadow: none;
 }
 
 .tracker-banner-content h1 {
@@ -116,13 +113,10 @@ body {
 /* ── Shared banner base for non-tracker pages ── */
 .page-banner {
   position: relative;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  background:
-    linear-gradient(135deg, rgba(56, 95, 77, 0.94), rgba(41, 69, 56, 0.88)),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent);
-  box-shadow: 0 8px 20px rgba(38, 60, 51, 0.14);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .page-banner-content {
@@ -131,9 +125,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  padding: 0.7rem 1rem;
-  color: #f8f6f1;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.24);
+  padding: 0;
+  color: var(--ink);
+  text-shadow: none;
 }
 
 .page-banner-content h1 {
@@ -324,12 +318,10 @@ body {
 }
 
 .dashboard-hero {
-  padding: 0.65rem 1rem;
-  background:
-    linear-gradient(135deg, rgba(56, 95, 77, 0.94), rgba(41, 69, 56, 0.88)),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent);
-  color: #f8f6f1;
-  box-shadow: 0 8px 20px rgba(38, 60, 51, 0.14);
+  padding: 0;
+  background: transparent;
+  color: var(--ink);
+  box-shadow: none;
 }
 
 .dashboard-hero h1 {

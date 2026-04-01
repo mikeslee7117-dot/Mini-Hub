@@ -135,7 +135,11 @@ function render() {
     return;
   }
 
-  for (const army of armies) {
+  const sortedArmies = [...armies].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+  );
+
+  for (const army of sortedArmies) {
     const card = document.createElement("section");
     card.className = "panel army-card";
 
@@ -163,8 +167,8 @@ function render() {
           </div>
         </h3>
         <div class="row-actions">
-          <button class="icon-btn" data-action="edit-army" data-army-id="${army.id}" title="Edit" aria-label="Edit">&#9998;</button>
           <button class="btn-small" data-action="toggle-picker" data-army-id="${army.id}" title="Add Units" aria-label="Add Units">Add Units</button>
+          <button class="icon-btn" data-action="edit-army" data-army-id="${army.id}" title="Edit" aria-label="Edit">&#9998;</button>
           <button class="icon-btn delete" data-action="delete-army" data-army-id="${army.id}" title="Delete Army" aria-label="Delete Army">&times;</button>
         </div>
       </div>
