@@ -81,6 +81,10 @@ body {
   padding: 1.5rem 1.5rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
 }
 
+.app--lists-compact {
+  gap: 0.65rem;
+}
+
 .tracker-banner {
   position: relative;
   border: 0;
@@ -777,7 +781,8 @@ td:last-child {
 
 .army-card,
 .scenario-card {
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.55rem;
+  padding: 0.65rem;
 }
 
 .army-header,
@@ -786,7 +791,7 @@ td:last-child {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.55rem;
 }
 
 .army-name,
@@ -909,6 +914,14 @@ td:last-child {
 .paint-filters {
   grid-template-columns: 2fr 1fr 1fr auto;
   margin-bottom: 0.7rem;
+}
+
+.paint-filters > label:first-child {
+  grid-column: 1 / 2;
+}
+
+.paint-filters > button {
+  grid-column: 4;
 }
 
 /* ── Dialog styles ── */
@@ -1171,9 +1184,17 @@ dialog::backdrop {
   .grid-form,
   .create-form,
   .filters,
-  .paint-filters,
   .requirement-form {
     grid-template-columns: 1fr;
+  }
+
+  .paint-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .paint-filters > label:first-child,
+  .paint-filters > button {
+    grid-column: span 2;
   }
 
   .paint-assignment-form {

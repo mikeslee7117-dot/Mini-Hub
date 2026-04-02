@@ -226,14 +226,14 @@ function render() {
 
   if (entries.length === 0) {
     const row = document.createElement("tr");
-    row.innerHTML = '<td colspan="8">No entries yet. Add your first unit above.</td>';
+    row.innerHTML = '<td colspan="4">No entries yet. Add your first unit above.</td>';
     entriesBody.appendChild(row);
     return;
   }
 
   if (visibleEntries.length === 0) {
     const row = document.createElement("tr");
-    row.innerHTML = '<td colspan="8">No entries match your current filters.</td>';
+    row.innerHTML = '<td colspan="4">No entries match your current filters.</td>';
     entriesBody.appendChild(row);
     return;
   }
@@ -242,11 +242,10 @@ function render() {
     const row = document.createElement("tr");
 
     row.innerHTML = `
-      <td>${escapeHtml(entry.game)}</td>
-      <td>${escapeHtml(entry.faction)}</td>
-      <td>${escapeHtml(entry.unit)}</td>
-      <td>${entry.number}</td>
-      <td>${escapeHtml(entry.type)}</td>
+      <td>
+        <div class="unit-label-strong">(${entry.number}) ${escapeHtml(entry.unit)}</div>
+        <div class="requirement-inline">${escapeHtml(entry.game)} / ${escapeHtml(entry.faction)} / ${escapeHtml(entry.type)}</div>
+      </td>
       <td><span class="badge s-${escapeHtml(entry.status)}">${escapeHtml(entry.status)}</span></td>
       <td class="armies-cell">${getUnitCollectionsHtml(entry.id)}</td>
       <td>

@@ -232,6 +232,10 @@ function openEditArmyDialog(armyId) {
 }
 
 function buildUnitsTable(armyId, units) {
+  const sortedUnits = [...units].sort((a, b) =>
+    a.entry.unit.localeCompare(b.entry.unit, undefined, { sensitivity: "base" })
+  );
+
   return `
     <div class="table-wrap">
       <table>
@@ -242,7 +246,7 @@ function buildUnitsTable(armyId, units) {
           </tr>
         </thead>
         <tbody>
-          ${units.map(({ assignment, entry, maxQuantity }) => `
+          ${sortedUnits.map(({ assignment, entry, maxQuantity }) => `
             <tr>
               <td>${escapeHtml(entry.faction)}</td>
               <td>${escapeHtml(entry.unit)}</td>

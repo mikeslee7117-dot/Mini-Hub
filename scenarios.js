@@ -251,8 +251,6 @@ function buildRequirementsTable(scenario) {
         <thead>
           <tr>
             <th>Requirement</th>
-            <th>Needed</th>
-            <th>Assigned</th>
             <th>Coverage</th>
             <th>Assigned Minis</th>
             <th>Actions</th>
@@ -275,11 +273,12 @@ function buildRequirementRow(scenario, requirement) {
       <td>
         <div class="requirement-summary">
           <span class="requirement-title">${escapeHtml(requirement.unit)}</span>
+          <span class="requirement-inline">${assignedTotal}/${requirement.requiredCount}</span>
+        </div>
+        <div class="requirement-summary">
           <span class="requirement-inline">${escapeHtml(requirement.faction)} / ${escapeHtml(requirement.type)}</span>
         </div>
       </td>
-      <td>${requirement.requiredCount}</td>
-      <td>${assignedTotal}</td>
       <td>${shortfall === 0 ? '<span class="fit-badge fit-exact">Covered</span>' : `<span class="fit-badge fit-short">Short ${shortfall}</span>`}</td>
       <td class="assignment-list">${buildAssignmentList(scenario, requirement)}</td>
       <td>

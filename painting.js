@@ -243,16 +243,17 @@ function renderPaintsTable() {
     const msg = paints.length === 0 
       ? "No paints yet. Add your first paint above." 
       : "No paints match your filters.";
-    paintsBody.innerHTML = `<tr><td colspan="4">${msg}</td></tr>`;
+    paintsBody.innerHTML = `<tr><td colspan="2">${msg}</td></tr>`;
     return;
   }
 
   for (const paint of filteredPaints) {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${escapeHtml(paint.name)}</td>
-      <td>${escapeHtml(paint.type)}</td>
-      <td>${escapeHtml(paint.brand)}</td>
+      <td>
+        <div class="unit-label-strong">${escapeHtml(paint.name)}</div>
+        <div class="requirement-inline">${escapeHtml(paint.type)} / ${escapeHtml(paint.brand)}</div>
+      </td>
       <td>
         <div class="row-actions">
           <button class="icon-btn" data-action="edit-paint" data-paint-id="${paint.id}" title="Edit" aria-label="Edit">&#9998;</button>
