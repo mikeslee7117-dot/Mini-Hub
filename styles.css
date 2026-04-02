@@ -299,7 +299,7 @@ body {
 .stat-card {
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 0.6rem 0.7rem;
+  padding: 0.8rem;
   background: rgba(255, 255, 255, 0.55);
 }
 
@@ -319,6 +319,7 @@ body {
 
 .dashboard-hero {
   padding: 0;
+  border: 0;
   background: transparent;
   color: var(--ink);
   box-shadow: none;
@@ -396,7 +397,7 @@ body {
 .dashboard-focus-item {
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 0.75rem 0.8rem;
+  padding: 0.8rem;
   background: rgba(255, 255, 255, 0.52);
 }
 
@@ -462,12 +463,13 @@ body {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.7rem;
+  margin-bottom: 0.75rem;
 }
 
 .dashboard-inline-card {
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 0.7rem 0.8rem;
+  padding: 0.8rem;
   background: rgba(255, 255, 255, 0.52);
 }
 
@@ -1195,6 +1197,10 @@ dialog::backdrop {
     grid-template-columns: 1fr;
   }
 
+  #summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .row-actions {
     flex-wrap: nowrap;
     gap: 0.35rem;
@@ -1265,8 +1271,9 @@ dialog::backdrop {
   }
 
   .dashboard-summary,
+  #summary,
   .dashboard-inline-stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .table-wrap table {

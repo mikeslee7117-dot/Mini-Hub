@@ -40,12 +40,28 @@ initUiHelpers();
 
 function initUiHelpers() {
   applyCompactDensity();
+  syncMenuToggleLabel();
   ensureToastRoot();
   bindGlobalToasts();
   wireGlobalDialogCloses();
 
   window.appToast = showToast;
   window.appConfirmDelete = confirmDelete;
+}
+
+function syncMenuToggleLabel() {
+  const menuToggle = document.querySelector(".menu-toggle");
+  const activeLink = document.querySelector(".site-nav .nav-link--active");
+  if (!(menuToggle instanceof HTMLElement) || !(activeLink instanceof HTMLElement)) {
+    return;
+  }
+
+  const pageLabel = String(activeLink.textContent || "").trim();
+  if (!pageLabel) {
+    return;
+  }
+
+  menuToggle.textContent = pageLabel;
 }
 
 function bindGlobalToasts() {
