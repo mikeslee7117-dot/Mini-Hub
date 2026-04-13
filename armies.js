@@ -141,7 +141,6 @@ function render() {
 
   for (const army of sortedArmies) {
     const card = document.createElement("section");
-    card.className = "panel army-card";
 
     const units = army.assignments
       .map((assignment) => {
@@ -152,6 +151,7 @@ function render() {
       .filter(Boolean);
 
     const isExpanded = expandedArmyIds.has(army.id);
+    card.className = `panel army-card${isExpanded ? "" : " is-collapsed"}`;
 
     card.innerHTML = `
       <div class="army-header">

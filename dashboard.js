@@ -62,7 +62,6 @@ function renderDashboard() {
   renderGameBreakdown(gameMetrics);
   renderArmyBreakdown(armyMetrics.armies);
   renderScenarioBreakdown(scenarioMetrics.scenarios);
-  renderPaintingBreakdown(paintingMetrics);
   renderFocusQueue(focusQueue);
 }
 

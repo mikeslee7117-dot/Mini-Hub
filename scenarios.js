@@ -14,6 +14,7 @@ const addRequirementDialog = document.getElementById("add-requirement-dialog");
 const addRequirementForm = document.getElementById("add-requirement-form");
 const requirementPickerDialog = document.getElementById("requirement-picker-dialog");
 const requirementPickerSelect = document.getElementById("requirement-picker-select");
+const requirementPickerQuantity = document.getElementById("requirement-picker-quantity");
 const requirementPickerAddBtn = document.getElementById("requirement-picker-add-btn");
 const editScenarioDialog = document.getElementById("edit-scenario-dialog");
 const editScenarioDialogName = document.getElementById("edit-scenario-dialog-name");
@@ -65,14 +66,47 @@ if (addRequirementForm instanceof HTMLFormElement) {
 
 if (requirementPickerAddBtn instanceof HTMLButtonElement) {
   requirementPickerAddBtn.addEventListener("click", () => {
-    if (!(requirementPickerDialog instanceof HTMLDialogElement) || !(requirementPickerSelect instanceof HTMLSelectElement)) return;
+    if (!(requirementPickerDialog instanceof HTMLDialogElement)
+      || !(requirementPickerSelect instanceof HTMLSelectElement)
+      || !(requirementPickerQuantity instanceof HTMLSelectElement)) {
+      return;
+    }
+
     const scenarioId = requirementPickerDialog.dataset.scenarioId;
     const requirementId = requirementPickerDialog.dataset.requirementId;
     const unitId = requirementPickerSelect.value;
-    if (!scenarioId || !requirementId || !unitId) return;
-    assignUnit(scenarioId, requirementId, unitId);
+    const quantity = Number(requirementPickerQuantity.value || 1);
+    if (!scenarioId || !requirementId || !unitId || !Number.isInteger(quantity) || quantity < 1) return;
+
+    const mode = requirementPickerDialog.dataset.mode || "add";
+    const originalUnitId = requirementPickerDialog.dataset.originalUnitId || "";
+    if (mode === "edit" && originalUnitId) {
+      updateAssignment(scenarioId, requirementId, originalUnitId, unitId, quantity);
+    } else {
+      assignUnit(scenarioId, requirementId, unitId, quantity);
+    }
+
+    requirementPickerDialog.dataset.mode = "add";
+    requirementPickerDialog.dataset.originalUnitId = "";
+    requirementPickerAddBtn.textContent = "Add";
     refreshRequirementPickerDialog(scenarioId, requirementId);
-    if (window.appToast) window.appToast("Assignment added");
+    if (window.appToast) window.appToast(mode === "edit" ? "Requirement saved" : "Assignment added");
+  });
+}
+
+if (requirementPickerSelect instanceof HTMLSelectElement) {
+  requirementPickerSelect.addEventListener("change", () => {
+    if (!(requirementPickerDialog instanceof HTMLDialogElement)) {
+      return;
+    }
+
+    const scenarioId = requirementPickerDialog.dataset.scenarioId;
+    const requirementId = requirementPickerDialog.dataset.requirementId;
+    if (!scenarioId || !requirementId) {
+      return;
+    }
+
+    refreshRequirementQuantityOptions(scenarioId, requirementId);
   });
 }
 
@@ -164,29 +198,11 @@ scenariosList.addEventListener("click", (event) => {
     openEditRequirementDialog(scenarioId, requirementId);
   } else if (target.dataset.action === "open-picker" && scenarioId && requirementId) {
     openRequirementPickerDialog(scenarioId, requirementId);
+  } else if (target.dataset.action === "edit-assignment" && scenarioId && requirementId && unitId) {
+    openEditAssignmentDialog(scenarioId, requirementId, unitId);
   } else if (target.dataset.action === "remove-assignment" && scenarioId && requirementId && unitId) {
     removeAssignment(scenarioId, requirementId, unitId);
   }
-});
-
-scenariosList.addEventListener("change", (event) => {
-  const target = event.target;
-  if (!(target instanceof HTMLSelectElement)) {
-    return;
-  }
-
-  if (target.dataset.action !== "set-assignment-quantity") {
-    return;
-  }
-
-  const scenarioId = target.dataset.scenarioId;
-  const requirementId = target.dataset.requirementId;
-  const unitId = target.dataset.unitId;
-  if (!scenarioId || !requirementId || !unitId) {
-    return;
-  }
-
-  setAssignmentQuantity(scenarioId, requirementId, unitId, Number(target.value));
 });
 
 function render() {
@@ -202,7 +218,7 @@ function render() {
 
   for (const scenario of scenarios) {
     const card = document.createElement("section");
-    card.className = "panel scenario-card";
+    card.className = `panel scenario-card${isExpanded ? "" : " is-collapsed"}`;
 
     const isExpanded = expandedScenarioIds.has(scenario.id);
 
@@ -280,7 +296,7 @@ function buildRequirementRow(scenario, requirement) {
         </div>
       </td>
       <td>${shortfall === 0 ? '<span class="fit-badge fit-exact">Covered</span>' : `<span class="fit-badge fit-short">Short ${shortfall}</span>`}</td>
-      <td class="assignment-list">${buildAssignmentList(scenario, requirement)}</td>
+      <td><div class="assignment-list">${buildAssignmentList(scenario, requirement)}</div></td>
       <td>
         <div class="row-actions">
           <button class="btn-small" data-action="open-picker" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}">Assign</button>
@@ -335,31 +351,64 @@ function openEditRequirementDialog(scenarioId, requirementId) {
 }
 
 function openRequirementPickerDialog(scenarioId, requirementId) {
-  if (!(requirementPickerDialog instanceof HTMLDialogElement)) {
+  if (!(requirementPickerDialog instanceof HTMLDialogElement)
+    || !(requirementPickerAddBtn instanceof HTMLButtonElement)) {
     return;
   }
+
   requirementPickerDialog.dataset.scenarioId = scenarioId;
   requirementPickerDialog.dataset.requirementId = requirementId;
+  requirementPickerDialog.dataset.mode = "add";
+  requirementPickerDialog.dataset.originalUnitId = "";
+  requirementPickerAddBtn.textContent = "Add";
   refreshRequirementPickerDialog(scenarioId, requirementId);
   requirementPickerDialog.showModal();
 }
 
-function refreshRequirementPickerDialog(scenarioId, requirementId) {
+function openEditAssignmentDialog(scenarioId, requirementId, unitId) {
+  const requirement = getRequirement(scenarioId, requirementId);
+  if (!(requirementPickerDialog instanceof HTMLDialogElement)
+    || !(requirementPickerAddBtn instanceof HTMLButtonElement)
+    || !requirement) {
+    return;
+  }
+
+  const assignment = requirement.assignments.find((item) => item.entryId === unitId);
+  if (!assignment) {
+    return;
+  }
+
+  requirementPickerDialog.dataset.scenarioId = scenarioId;
+  requirementPickerDialog.dataset.requirementId = requirementId;
+  requirementPickerDialog.dataset.mode = "edit";
+  requirementPickerDialog.dataset.originalUnitId = unitId;
+  requirementPickerAddBtn.textContent = "Save";
+  refreshRequirementPickerDialog(scenarioId, requirementId, {
+    selectedUnitId: unitId,
+    selectedQuantity: assignment.quantity
+  });
+  requirementPickerDialog.showModal();
+}
+
+function refreshRequirementPickerDialog(scenarioId, requirementId, pickerOptions = {}) {
   const scenario = getScenario(scenarioId);
   const requirement = getRequirement(scenarioId, requirementId);
-  if (!scenario || !requirement || !(requirementPickerSelect instanceof HTMLSelectElement)) {
+  if (!scenario || !requirement
+    || !(requirementPickerSelect instanceof HTMLSelectElement)
+    || !(requirementPickerQuantity instanceof HTMLSelectElement)) {
     return;
   }
 
   if (entries.length === 0) {
     requirementPickerSelect.innerHTML = '<option disabled>No tracked minis available</option>';
+    requirementPickerQuantity.innerHTML = '<option value="">-</option>';
     if (requirementPickerAddBtn instanceof HTMLButtonElement) {
       requirementPickerAddBtn.disabled = true;
     }
     return;
   }
 
-  const options = entries
+  const units = entries
     .map((entry) => {
       if (!sameText(requirement.game, entry.game)) {
         return null;
@@ -367,7 +416,8 @@ function refreshRequirementPickerDialog(scenarioId, requirementId) {
 
       const available = getAvailableForRequirement(scenario, requirement, entry.id);
       const alreadyAssigned = requirement.assignments.some((assignment) => assignment.entryId === entry.id);
-      if (available <= 0 || alreadyAssigned) {
+      const isSelectedInEdit = pickerOptions.selectedUnitId === entry.id;
+      if (available <= 0 || (alreadyAssigned && !isSelectedInEdit)) {
         return null;
       }
 
@@ -375,6 +425,7 @@ function refreshRequirementPickerDialog(scenarioId, requirementId) {
       return {
         id: entry.id,
         unit: entry.unit,
+        type: entry.type,
         available,
         isClose: fit.label === "Close"
       };
@@ -387,21 +438,54 @@ function refreshRequirementPickerDialog(scenarioId, requirementId) {
       return a.unit.localeCompare(b.unit, undefined, { sensitivity: "base" });
     });
 
-  if (options.length === 0) {
+  if (units.length === 0) {
     requirementPickerSelect.innerHTML = '<option disabled>No unassigned units available</option>';
+    requirementPickerQuantity.innerHTML = '<option value="">-</option>';
     if (requirementPickerAddBtn instanceof HTMLButtonElement) {
       requirementPickerAddBtn.disabled = true;
     }
     return;
   }
 
-  requirementPickerSelect.innerHTML = options
-    .map((item) => `<option value="${item.id}">${escapeHtml(item.unit)} (${item.available} available)</option>`)
+  requirementPickerSelect.innerHTML = units
+    .map((item) => `<option value="${item.id}">${escapeHtml(item.unit)} (${item.available} available) - ${escapeHtml(item.type)}</option>`)
     .join("");
+
+  const selectedUnitId = units.some((item) => item.id === pickerOptions.selectedUnitId)
+    ? pickerOptions.selectedUnitId
+    : requirementPickerSelect.value;
+  requirementPickerSelect.value = selectedUnitId;
+
+  refreshRequirementQuantityOptions(scenarioId, requirementId, pickerOptions.selectedQuantity);
 
   if (requirementPickerAddBtn instanceof HTMLButtonElement) {
     requirementPickerAddBtn.disabled = false;
   }
+}
+
+function refreshRequirementQuantityOptions(scenarioId, requirementId, preferredQuantity) {
+  const scenario = getScenario(scenarioId);
+  const requirement = getRequirement(scenarioId, requirementId);
+  if (!scenario || !requirement
+    || !(requirementPickerSelect instanceof HTMLSelectElement)
+    || !(requirementPickerQuantity instanceof HTMLSelectElement)) {
+    return;
+  }
+
+  const unitId = requirementPickerSelect.value;
+  if (!unitId) {
+    requirementPickerQuantity.innerHTML = '<option value="">-</option>';
+    return;
+  }
+
+  const maxQuantity = getAvailableForRequirement(scenario, requirement, unitId);
+  const options = Array.from({ length: Math.max(maxQuantity, 1) }, (_, index) => index + 1)
+    .map((count) => `<option value="${count}">${count}</option>`)
+    .join("");
+
+  requirementPickerQuantity.innerHTML = options;
+  const desired = Number.isInteger(preferredQuantity) ? preferredQuantity : 1;
+  requirementPickerQuantity.value = String(Math.min(Math.max(desired, 1), Math.max(maxQuantity, 1)));
 }
 
 function buildAssignmentList(scenario, requirement) {
@@ -415,15 +499,13 @@ function buildAssignmentList(scenario, requirement) {
       return "";
     }
 
-    const maxQuantity = getAvailableForRequirement(scenario, requirement, entry.id);
-    const options = Array.from({ length: maxQuantity }, (_, index) => index + 1)
-      .map((count) => `<option value="${count}" ${count === assignment.quantity ? "selected" : ""}>${count}</option>`)
-      .join("");
-
     return `
       <div class="assignment-row">
-        <span class="assignment-unit">${escapeHtml(entry.unit)}</span>
-        <select class="assignment-select" data-action="set-assignment-quantity" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}" data-unit-id="${entry.id}">${options}</select>
+        <div>
+          <span class="assignment-unit">${escapeHtml(entry.unit)} (${assignment.quantity})</span>
+          <div class="requirement-inline">${escapeHtml(entry.type)}</div>
+        </div>
+        <button class="icon-btn" data-action="edit-assignment" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}" data-unit-id="${entry.id}" title="Edit" aria-label="Edit">&#9998;</button>
         <button class="icon-btn delete" data-action="remove-assignment" data-scenario-id="${scenario.id}" data-requirement-id="${requirement.id}" data-unit-id="${entry.id}" title="Remove" aria-label="Remove">&times;</button>
       </div>
     `;
@@ -476,8 +558,9 @@ function deleteRequirement(scenarioId, requirementId) {
   render();
 }
 
-function assignUnit(scenarioId, requirementId, unitId) {
+function assignUnit(scenarioId, requirementId, unitId, quantity = 1) {
   const requirement = getRequirement(scenarioId, requirementId);
+  const scenario = getScenario(scenarioId);
   if (!requirement) {
     return;
   }
@@ -486,11 +569,42 @@ function assignUnit(scenarioId, requirementId, unitId) {
     return;
   }
 
-  if (getAvailableForRequirement(getScenario(scenarioId), requirement, unitId) <= 0) {
+  const maxQuantity = getAvailableForRequirement(scenario, requirement, unitId);
+  if (maxQuantity <= 0) {
     return;
   }
 
-  requirement.assignments.push({ entryId: unitId, quantity: 1 });
+  requirement.assignments.push({
+    entryId: unitId,
+    quantity: Math.min(Math.max(Number(quantity) || 1, 1), maxQuantity)
+  });
+  persistScenarios();
+  render();
+}
+
+function updateAssignment(scenarioId, requirementId, originalUnitId, nextUnitId, nextQuantity) {
+  const scenario = getScenario(scenarioId);
+  const requirement = getRequirement(scenarioId, requirementId);
+  if (!scenario || !requirement) {
+    return;
+  }
+
+  const assignment = requirement.assignments.find((item) => item.entryId === originalUnitId);
+  if (!assignment) {
+    return;
+  }
+
+  if (originalUnitId !== nextUnitId && requirement.assignments.some((item) => item.entryId === nextUnitId)) {
+    return;
+  }
+
+  const maxQuantity = getAvailableForRequirement(scenario, requirement, nextUnitId);
+  if (maxQuantity <= 0) {
+    return;
+  }
+
+  assignment.entryId = nextUnitId;
+  assignment.quantity = Math.min(Math.max(Number(nextQuantity) || 1, 1), maxQuantity);
   persistScenarios();
   render();
 }

@@ -510,6 +510,15 @@ body {
   margin-bottom: 0.9rem;
 }
 
+.tracker-filters {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tracker-filters > button {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
 .grid-form,
 .create-form,
 .requirement-form {
@@ -601,6 +610,8 @@ thead th {
   z-index: 2;
   background: rgba(245, 242, 232, 0.96);
   backdrop-filter: blur(2px);
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 th,
@@ -623,7 +634,8 @@ td:last-child {
   border-radius: 8px;
   padding: 0.15rem 0.25rem;
   font: inherit;
-  font-weight: 700;
+  font-weight: inherit;
+  font-size: inherit;
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -760,7 +772,7 @@ td:last-child {
 
 .assignment-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 92px auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 0.4rem;
 }
@@ -792,6 +804,10 @@ td:last-child {
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 0.55rem;
+}
+
+.army-card.is-collapsed .army-header {
+  margin-bottom: 0;
 }
 
 .army-name,

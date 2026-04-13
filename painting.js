@@ -179,18 +179,85 @@ document.addEventListener("click", (event) => {
   const paintId = paintSelect.value;
   const areas = areasInput.value.trim();
   if (!paintId || !areas) return;
-  
-  plan.assignments.push({
-    id: createId(),
-    paintId,
-    areas
-  });
+
+  const editingAssignmentId = editPlanDialog.dataset.editingAssignmentId;
+  if (editingAssignmentId) {
+    const assignment = plan.assignments.find((item) => item.id === editingAssignmentId);
+    if (!assignment) return;
+    assignment.paintId = paintId;
+    assignment.areas = areas;
+    delete editPlanDialog.dataset.editingAssignmentId;
+  } else {
+    plan.assignments.push({
+      id: createId(),
+      paintId,
+      areas
+    });
+  }
   
   persistPaintPlans();
   if (editPlanDialogBody instanceof HTMLDivElement) {
     editPlanDialogBody.innerHTML = buildPlanEditorContent(plan);
   }
-  if (window.appToast) window.appToast("Paint assigned");
+  if (window.appToast) window.appToast(editingAssignmentId ? "Paint saved" : "Paint assigned");
+});
+
+document.addEventListener("click", (event) => {
+  const btn = event.target.closest("button[data-action]");
+  if (!btn || !(editPlanDialog instanceof HTMLDialogElement) || !(editPlanDialogBody instanceof HTMLDivElement)) {
+    return;
+  }
+
+  if (!editPlanDialog.open || !btn.closest("#edit-plan-dialog")) {
+    return;
+  }
+
+  const action = btn.dataset.action;
+  const planId = btn.dataset.planId;
+  const assignmentId = btn.dataset.assignmentId;
+  if (!planId) {
+    return;
+  }
+
+  const plan = paintPlans.find((item) => item.id === planId);
+  if (!plan) {
+    return;
+  }
+
+  if (action === "edit-assignment" && assignmentId) {
+    const assignment = plan.assignments.find((item) => item.id === assignmentId);
+    if (!assignment) {
+      return;
+    }
+
+    editPlanDialog.dataset.editingAssignmentId = assignmentId;
+    editPlanDialogBody.innerHTML = buildPlanEditorContent(plan);
+    const paintSelect = editPlanDialog.querySelector(`#paint-select-${planId}`);
+    const areasInput = editPlanDialog.querySelector(`#areas-input-${planId}`);
+    if (paintSelect instanceof HTMLSelectElement) {
+      paintSelect.value = assignment.paintId;
+    }
+    if (areasInput instanceof HTMLInputElement) {
+      areasInput.value = assignment.areas;
+      areasInput.focus();
+    }
+    return;
+  }
+
+  if (action === "cancel-assignment-edit") {
+    delete editPlanDialog.dataset.editingAssignmentId;
+    editPlanDialogBody.innerHTML = buildPlanEditorContent(plan);
+    return;
+  }
+
+  if (action === "delete-assignment" && assignmentId) {
+    deleteAssignment(planId, assignmentId);
+    const refreshedPlan = paintPlans.find((item) => item.id === planId);
+    if (refreshedPlan) {
+      delete editPlanDialog.dataset.editingAssignmentId;
+      editPlanDialogBody.innerHTML = buildPlanEditorContent(refreshedPlan);
+    }
+  }
 });
 
 if (paintsBody instanceof HTMLTableSectionElement) {
@@ -423,6 +490,7 @@ function openEditPlanDialog(planId) {
     editPlanDialogTitle.textContent = entry ? `Edit Unit Paints: ${entry.unit}` : "Edit Unit Paints";
   }
   editPlanDialog.dataset.planId = planId;
+  delete editPlanDialog.dataset.editingAssignmentId;
   editPlanDialogBody.innerHTML = buildPlanEditorContent(plan);
   editPlanDialog.showModal();
 }
@@ -477,6 +545,7 @@ function buildAssignmentRow(planId, assignment) {
       <td>${escapeHtml(assignment.areas)}</td>
       <td>
         <div class="row-actions">
+          <button class="icon-btn" data-action="edit-assignment" data-plan-id="${planId}" data-assignment-id="${assignment.id}" title="Edit" aria-label="Edit">&#9998;</button>
           <button class="icon-btn delete" data-action="delete-assignment" data-plan-id="${planId}" data-assignment-id="${assignment.id}" title="Remove" aria-label="Remove">&times;</button>
         </div>
       </td>
@@ -531,12 +600,19 @@ function buildAssignmentAddRow(plan) {
     return '<p class="picker-empty">No paints available yet. Add paints in the Paint Inventory section first.</p>';
   }
 
+  const editingAssignmentId = editPlanDialog instanceof HTMLDialogElement
+    ? editPlanDialog.dataset.editingAssignmentId
+    : "";
+  const editingAssignment = editingAssignmentId
+    ? plan.assignments.find((assignment) => assignment.id === editingAssignmentId)
+    : null;
+
   const options = sortedPaints
     .map((paint) => ({
       id: paint.id,
       label: `${paint.name} (${paint.brand} / ${paint.type})`
     }))
-    .map((item) => `<option value="${item.id}">${escapeHtml(item.label)}</option>`)
+    .map((item) => `<option value="${item.id}" ${editingAssignment && editingAssignment.paintId === item.id ? "selected" : ""}>${escapeHtml(item.label)}</option>`)
     .join("");
 
   return `
@@ -549,9 +625,10 @@ function buildAssignmentAddRow(plan) {
       </label>
       <label>
         Area(s)
-        <input id="areas-input-${plan.id}" class="inline-input" placeholder="e.g. Head, Legs, Armor" />
+        <input id="areas-input-${plan.id}" class="inline-input" value="${escapeHtml(editingAssignment ? editingAssignment.areas : "")}" placeholder="e.g. Head, Legs, Armor" />
       </label>
-      <button type="button" class="btn-small" data-action="add-assignment" data-plan-id="${plan.id}" title="Add Paint">Add</button>
+      <button type="button" class="btn-small" data-action="add-assignment" data-plan-id="${plan.id}" title="${editingAssignment ? "Save Paint" : "Add Paint"}">${editingAssignment ? "Save" : "Add"}</button>
+      ${editingAssignment ? `<button type="button" class="btn-small btn-secondary" data-action="cancel-assignment-edit" data-plan-id="${plan.id}" title="Cancel Edit">Cancel</button>` : ""}
     </div>
   `;
 }
