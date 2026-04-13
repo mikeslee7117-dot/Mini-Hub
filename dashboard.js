@@ -35,13 +35,10 @@ function renderDashboard() {
   const unpaintedMinis = entries
     .filter((entry) => entry.status === "Unpainted")
     .reduce((sum, entry) => sum + entry.number, 0);
-  const activeWorkMinis = Math.max(totalMinis - unpaintedMinis - completedMinis, 0);
+  const activeWorkMinis = entries
+    .filter((entry) => ["Primed", "Painted", "Based"].includes(entry.status))
+    .reduce((sum, entry) => sum + entry.number, 0);
   const completionPct = percent(completedMinis, totalMinis);
-
-  const statusTotals = Object.fromEntries(STATUS_VALUES.map((status) => [status, 0]));
-  for (const entry of entries) {
-    statusTotals[entry.status] += entry.number;
-  }
 
   const armyMetrics = buildArmyMetrics(entries, armies);
   const scenarioMetrics = buildScenarioMetrics(entries, scenarios);
@@ -56,23 +53,12 @@ function renderDashboard() {
   setText("metric-paints", paints.length);
   setText("metric-units", totalUnits);
 
-  setText("metric-unpainted", unpaintedMinis);
-  setText("metric-active-work", activeWorkMinis);
-  setText("metric-completed-minis", completedMinis);
-
-  setText("metric-army-assigned", armyMetrics.assignedMinis);
-  setText("metric-largest-army", armyMetrics.largestArmySize);
-  setText("metric-average-army", armyMetrics.averageArmySize);
-
-  setText("metric-requirements", scenarioMetrics.totalRequirements);
-  setText("metric-covered", scenarioMetrics.coveredRequirements);
-  setText("metric-shortfall", scenarioMetrics.shortfallMinis);
-
+  setText("metric-paints-owned", paintingMetrics.paintsOwned);
   setText("metric-planned-units", paintingMetrics.plannedUnits);
-  setText("metric-paint-assignments", paintingMetrics.assignmentCount);
-  setText("metric-paint-brands", paintingMetrics.brandCount);
+  setText("metric-most-used-paint", paintingMetrics.mostUsedPaint);
+  setText("metric-paint-plan-pct", `${paintingMetrics.planCoveragePct}%`);
 
-  renderStatusBreakdown(statusTotals, totalMinis);
+  renderStatusBreakdown({ unpaintedMinis, activeWorkMinis, completedMinis }, totalMinis);
   renderGameBreakdown(gameMetrics);
   renderArmyBreakdown(armyMetrics.armies);
   renderScenarioBreakdown(scenarioMetrics.scenarios);
@@ -166,6 +152,8 @@ function buildScenarioMetrics(entries, scenarios) {
 }
 
 function buildPaintingMetrics(entries, paints, paintPlans) {
+  const paintUsage = new Map();
+
   const plansWithEntries = paintPlans
     .map((plan) => {
       const entry = entries.find((item) => item.id === plan.entryId);
@@ -183,6 +171,23 @@ function buildPaintingMetrics(entries, paints, paintPlans) {
     .filter((plan) => plan !== null)
     .sort((left, right) => right.assignmentCount - left.assignmentCount || compareText(left.unit, right.unit));
 
+  for (const plan of paintPlans) {
+    for (const assignment of plan.assignments) {
+      paintUsage.set(assignment.paintId, (paintUsage.get(assignment.paintId) || 0) + 1);
+    }
+  }
+
+  const mostUsedPaint = [...paintUsage.entries()]
+    .map(([paintId, uses]) => {
+      const paint = paints.find((item) => item.id === paintId);
+      if (!paint) {
+        return null;
+      }
+      return { name: paint.name, uses };
+    })
+    .filter((item) => item !== null)
+    .sort((left, right) => right.uses - left.uses || compareText(left.name, right.name))[0];
+
   const brands = new Set(paints.map((paint) => paint.brand.trim()).filter(Boolean));
   const brandBreakdown = Array.from(brands).map((brand) => {
     const count = paints.filter((paint) => sameText(paint.brand, brand)).length;
@@ -190,9 +195,11 @@ function buildPaintingMetrics(entries, paints, paintPlans) {
   }).sort((left, right) => right.count - left.count || compareText(left.brand, right.brand));
 
   return {
+    paintsOwned: paints.length,
     plannedUnits: plansWithEntries.length,
     assignmentCount: paintPlans.reduce((sum, plan) => sum + plan.assignments.length, 0),
     brandCount: brands.size,
+    mostUsedPaint: mostUsedPaint ? `${mostUsedPaint.name} (${mostUsedPaint.uses})` : "None",
     planCoveragePct: percent(plansWithEntries.length, entries.length),
     plans: plansWithEntries,
     brands: brandBreakdown
@@ -263,7 +270,7 @@ function buildFocusQueue(entries, paintPlans) {
       };
     })
     .sort((left, right) => left.stageIndex - right.stageIndex || right.minis - left.minis || left.paintAssignments - right.paintAssignments || compareText(left.unit, right.unit))
-    .slice(0, 6);
+    .slice(0, 3);
 }
 
 function renderStatusBreakdown(statusTotals, totalMinis) {
@@ -272,13 +279,19 @@ function renderStatusBreakdown(statusTotals, totalMinis) {
     return;
   }
 
-  root.innerHTML = STATUS_VALUES.map((status) => {
-    const count = statusTotals[status] || 0;
+  const statusRows = [
+    { label: "Unpainted", count: statusTotals.unpaintedMinis || 0 },
+    { label: "In Progress", count: statusTotals.activeWorkMinis || 0 },
+    { label: "Completed", count: statusTotals.completedMinis || 0 }
+  ];
+
+  root.innerHTML = statusRows.map((status) => {
+    const count = status.count;
     const width = totalMinis > 0 ? Math.max((count / totalMinis) * 100, count > 0 ? 4 : 0) : 0;
     return `
       <article class="dashboard-status-row">
         <div class="dashboard-item-top">
-          <span class="dashboard-item-name">${escapeHtml(status)}</span>
+          <span class="dashboard-item-name">${escapeHtml(status.label)}</span>
           <span class="dashboard-item-pill">${count} minis</span>
         </div>
         <div class="dashboard-meter"><div class="dashboard-meter-fill" style="width: ${width}%"></div></div>
@@ -324,15 +337,19 @@ function renderArmyBreakdown(items) {
     return;
   }
 
-  root.innerHTML = items.slice(0, 5).map((item) => {
+  const leastCovered = [...items].sort((left, right) =>
+    left.completionPct - right.completionPct || right.minis - left.minis || compareText(left.name, right.name)
+  );
+
+  root.innerHTML = leastCovered.slice(0, 3).map((item) => {
     return `
       <article class="dashboard-list-item">
         <div class="dashboard-item-top">
           <span class="dashboard-item-name">${escapeHtml(item.name)}</span>
-          <span class="dashboard-item-pill">${item.minis} minis</span>
+          <span class="dashboard-item-pill">${item.completionPct}% covered</span>
         </div>
         <div class="dashboard-item-meta">${escapeHtml(item.game || "Unassigned game")} · ${item.unitCount} units assigned</div>
-        <div class="dashboard-item-note">${item.completionPct}% of assigned minis are completed</div>
+        <div class="dashboard-item-note">${item.minis} minis assigned</div>
         <div class="dashboard-meter"><div class="dashboard-meter-fill" style="width: ${Math.max(item.completionPct, item.minis > 0 ? 4 : 0)}%"></div></div>
       </article>
     `;
@@ -350,7 +367,13 @@ function renderScenarioBreakdown(items) {
     return;
   }
 
-  root.innerHTML = items.slice(0, 5).map((item) => {
+  const leastCovered = [...items].sort((left, right) => {
+    const leftCoverage = percent(left.coveredRequirements, left.totalRequirements);
+    const rightCoverage = percent(right.coveredRequirements, right.totalRequirements);
+    return leftCoverage - rightCoverage || right.totalRequirements - left.totalRequirements || compareText(left.name, right.name);
+  });
+
+  root.innerHTML = leastCovered.slice(0, 3).map((item) => {
     const coveragePct = percent(item.coveredRequirements, item.totalRequirements);
     return `
       <article class="dashboard-list-item">

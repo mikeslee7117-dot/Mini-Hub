@@ -27,7 +27,6 @@
 
     <main class="app">
       <section class="panel dashboard-hero">
-        <p class="eyebrow">Campaign overview</p>
         <h1>Dashboard</h1>
         <p>Track overall collection progress, army composition, scenario readiness, and painting workload in one place.</p>
       </section>
@@ -67,20 +66,6 @@
               <p>Mini counts grouped by painting stage.</p>
             </div>
           </div>
-          <div class="dashboard-inline-stats">
-            <article class="dashboard-inline-card">
-              <strong id="metric-unpainted">0</strong>
-              <span>Unpainted minis</span>
-            </article>
-            <article class="dashboard-inline-card">
-              <strong id="metric-active-work">0</strong>
-              <span>In-progress minis</span>
-            </article>
-            <article class="dashboard-inline-card">
-              <strong id="metric-completed-minis">0</strong>
-              <span>Completed minis</span>
-            </article>
-          </div>
           <div id="status-breakdown" class="dashboard-status-list"></div>
         </section>
 
@@ -103,20 +88,6 @@
               <p>Army list count and assignment density.</p>
             </div>
           </div>
-          <div class="dashboard-inline-stats">
-            <article class="dashboard-inline-card">
-              <strong id="metric-army-assigned">0</strong>
-              <span>Minis assigned to armies</span>
-            </article>
-            <article class="dashboard-inline-card">
-              <strong id="metric-largest-army">0</strong>
-              <span>Largest army size</span>
-            </article>
-            <article class="dashboard-inline-card">
-              <strong id="metric-average-army">0</strong>
-              <span>Average army size</span>
-            </article>
-          </div>
           <div id="army-breakdown" class="dashboard-list"></div>
         </section>
 
@@ -126,20 +97,6 @@
               <h2><a class="card-title-link" href="scenarios.html">Scenarios</a></h2>
               <p>Requirement coverage and shortfall across scenario pages.</p>
             </div>
-          </div>
-          <div class="dashboard-inline-stats">
-            <article class="dashboard-inline-card">
-              <strong id="metric-requirements">0</strong>
-              <span>Total requirements</span>
-            </article>
-            <article class="dashboard-inline-card">
-              <strong id="metric-covered">0</strong>
-              <span>Covered requirements</span>
-            </article>
-            <article class="dashboard-inline-card">
-              <strong id="metric-shortfall">0</strong>
-              <span>Shortfall minis</span>
-            </article>
           </div>
           <div id="scenario-breakdown" class="dashboard-list"></div>
         </section>
@@ -155,16 +112,20 @@
           </div>
           <div class="dashboard-inline-stats">
             <article class="dashboard-inline-card">
+              <strong id="metric-paints-owned">0</strong>
+              <span>Number of paints owned</span>
+            </article>
+            <article class="dashboard-inline-card">
               <strong id="metric-planned-units">0</strong>
               <span>Units with paint plans</span>
             </article>
             <article class="dashboard-inline-card">
-              <strong id="metric-paint-assignments">0</strong>
-              <span>Paint assignments</span>
+              <strong id="metric-most-used-paint">None</strong>
+              <span>Most used paint</span>
             </article>
             <article class="dashboard-inline-card">
-              <strong id="metric-paint-brands">0</strong>
-              <span>Brands in stash</span>
+              <strong id="metric-paint-plan-pct">0%</strong>
+              <span>Units with paint plans</span>
             </article>
           </div>
           <div id="painting-breakdown" class="dashboard-list"></div>
