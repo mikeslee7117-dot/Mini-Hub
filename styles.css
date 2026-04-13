@@ -85,6 +85,18 @@ body {
   gap: 0.65rem;
 }
 
+.armies-page {
+  gap: 0.4rem;
+}
+
+.armies-page > .panel {
+  padding: 0.75rem;
+}
+
+.armies-page .section-toolbar {
+  margin-bottom: 0.45rem;
+}
+
 .tracker-banner {
   position: relative;
   border: 0;
@@ -1202,6 +1214,18 @@ dialog::backdrop {
   .filters,
   .requirement-form {
     grid-template-columns: 1fr;
+  }
+
+  .tracker-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tracker-filters > label {
+    grid-column: span 1;
+  }
+
+  .tracker-filters > button {
+    grid-column: span 2;
   }
 
   .paint-filters {
