@@ -87,6 +87,8 @@ body {
 
 .armies-page {
   gap: 0.4rem;
+  padding-top: 0.75rem;
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 }
 
 .armies-page > .panel {
@@ -95,6 +97,19 @@ body {
 
 .armies-page .section-toolbar {
   margin-bottom: 0.45rem;
+}
+
+.armies-page .page-banner-content h1 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.armies-page .page-banner-content p {
+  display: none;
+}
+
+.armies-page .army-card {
+  margin-bottom: 0.3rem;
 }
 
 .tracker-banner {
@@ -523,7 +538,7 @@ body {
 }
 
 .tracker-filters {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .tracker-filters > button {
